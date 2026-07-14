@@ -1,22 +1,21 @@
 // Full-text search across the document with highlight overlays.
 import { state, setStatus } from './state.js';
 import { pdfjsLib, getPageView, eachPageView, scrollToPage, onPageRendered, onDocChanged } from './viewer.js';
+import { getPageIndex } from './textindex.js';
 
-// Per-page text index: pageNum -> { items, styles, joined, offsets }
-let index = null;
-const measureCtx = document.createElement('canvas').getContext('2d');
-let matches = []; // { page, start, len, rects: computed lazily per zoom }
+let pageIndexes = null; // pageNum -> index entry, snapshot for current search
+let matches = []; // { page, start, len }
 let currentIdx = -1;
 let lastQuery = '';
+const measureCtx = document.createElement('canvas').getContext('2d');
 
 export function initSearch() {
   onDocChanged(() => {
-    index = null;
+    pageIndexes = null;
     matches = [];
     currentIdx = -1;
     lastQuery = '';
     updateSearchStatus();
-    clearAllHits();
   });
   onPageRendered((n) => {
     if (matches.length) drawHitsForPage(n);
@@ -43,23 +42,6 @@ export function initSearch() {
   });
 }
 
-async function buildIndex() {
-  index = new Map();
-  for (let n = 1; n <= state.pageCount; n++) {
-    const view = getPageView(n);
-    const content = await view.page.getTextContent();
-    const items = content.items.filter((it) => 'str' in it);
-    let joined = '';
-    const offsets = [];
-    for (const it of items) {
-      offsets.push(joined.length);
-      joined += it.str;
-      if (it.hasEOL) joined += ' ';
-    }
-    index.set(n, { items, styles: content.styles, joined, lower: joined.toLowerCase(), offsets });
-  }
-}
-
 export async function runSearch(query, direction = 1) {
   query = query.trim();
   if (!query) {
@@ -68,9 +50,12 @@ export async function runSearch(query, direction = 1) {
   }
   if (!state.pdf) return;
 
-  if (!index) {
+  if (!pageIndexes) {
     setStatus('Indexing text…');
-    await buildIndex();
+    pageIndexes = new Map();
+    for (let n = 1; n <= state.pageCount; n++) {
+      pageIndexes.set(n, await getPageIndex(n));
+    }
   }
 
   if (query.toLowerCase() !== lastQuery) {
@@ -78,22 +63,19 @@ export async function runSearch(query, direction = 1) {
     matches = [];
     currentIdx = -1;
     for (let n = 1; n <= state.pageCount; n++) {
-      const pageIndex = index.get(n);
+      const idx = pageIndexes.get(n);
       let from = 0;
       while (true) {
-        const at = pageIndex.lower.indexOf(lastQuery, from);
+        const at = idx.lower.indexOf(lastQuery, from);
         if (at === -1) break;
         matches.push({ page: n, start: at, len: query.length });
         from = at + 1;
       }
     }
-    clearAllHits();
-    eachPageView((n, view) => {
-      if (view.rendered) drawHitsForPage(n);
-    });
   }
 
   if (!matches.length) {
+    clearAllHits();
     updateSearchStatus();
     setStatus(`No matches for “${query}”`);
     return;
@@ -103,6 +85,7 @@ export async function runSearch(query, direction = 1) {
   const m = matches[currentIdx];
   const rects = rectsForMatch(m);
   scrollToPage(m.page, rects.length ? rects[0].top - 120 : 0);
+  clearAllHits();
   eachPageView((n, view) => {
     if (view.rendered) drawHitsForPage(n);
   });
@@ -133,10 +116,10 @@ function clearAllHits() {
 // Maps a match (character range in the page's joined text) to CSS rects in the
 // current viewport, splitting across text items where needed.
 function rectsForMatch(m) {
-  const pageIndex = index.get(m.page);
+  const idx = pageIndexes?.get(m.page);
   const view = getPageView(m.page);
-  if (!pageIndex || !view) return [];
-  const { items, offsets } = pageIndex;
+  if (!idx || !view) return [];
+  const { items, offsets } = idx;
   const rects = [];
   const end = m.start + m.len;
 
@@ -156,7 +139,7 @@ function rectsForMatch(m) {
 
     // Measure substring offsets with a comparable font so highlights line up
     // with proportional text, normalising by the full string's measured width.
-    const family = pageIndex.styles?.[it.fontName]?.fontFamily || 'sans-serif';
+    const family = idx.styles?.[it.fontName]?.fontFamily || 'sans-serif';
     measureCtx.font = `${fontHeight}px ${family}`;
     const fullW = measureCtx.measureText(it.str).width || 1;
     const startFrac = measureCtx.measureText(it.str.slice(0, localStart)).width / fullW;

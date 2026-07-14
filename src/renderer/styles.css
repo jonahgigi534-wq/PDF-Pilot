@@ -227,6 +227,29 @@ body {
 .textLayer span[role="img"] { user-select: none; cursor: default; }
 .textLayer ::selection { background: rgba(77, 141, 232, 0.35); }
 
+/* ---------- editing overlays ---------- */
+.inline-edit {
+  position: absolute;
+  z-index: 5;
+  background: white;
+  color: black;
+  border: 2px solid #4d8de8;
+  border-radius: 2px;
+  padding: 1px 2px;
+  line-height: 1.1;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+}
+
+.marquee {
+  position: absolute;
+  pointer-events: none;
+  z-index: 4;
+}
+.whiteout-marquee {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px dashed #888;
+}
+
 /* search highlights drawn by PDFPilot (not pdf.js) */
 .search-hit {
   position: absolute;

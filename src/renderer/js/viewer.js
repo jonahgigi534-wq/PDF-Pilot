@@ -35,15 +35,19 @@ export function onDocChanged(fn) { docChangeListeners.push(fn); }
 export function onPageRendered(fn) { pageRenderedListeners.push(fn); }
 export function onCurrentPageChanged(fn) { currentPageListeners.push(fn); }
 
+let loadingTask = null;
+
 export async function openBytes(bytes, filePath) {
   const data = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
   setStatus('Opening…');
   // pdf.js transfers the buffer it is given to its worker, so pass a copy and
   // keep `state.bytes` intact for pdf-lib edits.
-  const pdf = await pdfjsLib.getDocument({ data: data.slice(), ...DOC_OPTS }).promise;
-  if (state.pdf) {
-    await state.pdf.destroy().catch(() => {});
+  const task = pdfjsLib.getDocument({ data: data.slice(), ...DOC_OPTS });
+  const pdf = await task.promise;
+  if (loadingTask) {
+    await loadingTask.destroy().catch(() => {});
   }
+  loadingTask = task;
   state.bytes = data;
   state.pdf = pdf;
   state.filePath = filePath ?? state.filePath;

@@ -5,6 +5,9 @@ import {
   zoomIn, zoomOut, fitWidth, goToPage,
 } from './viewer.js';
 import { initSearch, runSearch } from './search.js';
+import { initTools } from './tools.js';
+import { initEditTools } from './edit-text.js';
+import { save, saveAs, undo, redo, onHistoryChanged } from './document.js';
 
 const api = window.pdfpilot;
 
@@ -55,14 +58,33 @@ function wireToolbar() {
       e.target.blur();
     }
   });
+  $('btn-save').addEventListener('click', save);
+  $('btn-save-as').addEventListener('click', saveAs);
+  $('btn-undo').addEventListener('click', undo);
+  $('btn-redo').addEventListener('click', redo);
 
   window.addEventListener('keydown', (e) => {
+    if (e.target.matches?.('input, textarea, [contenteditable]')) return;
     if (e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === 'o') {
       e.preventDefault();
       openFromDialog();
     }
     if (e.ctrlKey && (e.key === '=' || e.key === '+')) { e.preventDefault(); zoomIn(); }
     if (e.ctrlKey && e.key === '-') { e.preventDefault(); zoomOut(); }
+    if (e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === 's') { e.preventDefault(); save(); }
+    if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 's') { e.preventDefault(); saveAs(); }
+    if (e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
+    if (e.ctrlKey && (e.key.toLowerCase() === 'y' || (e.shiftKey && e.key.toLowerCase() === 'z'))) {
+      e.preventDefault();
+      redo();
+    }
+  });
+
+  onHistoryChanged(() => {
+    document.getElementById('btn-undo').disabled = !state.undoStack.length;
+    document.getElementById('btn-redo').disabled = !state.redoStack.length;
+    const name = state.filePath ? state.filePath.split(/[\\/]/).pop() : 'Untitled';
+    document.getElementById('doc-name').textContent = state.dirty ? `${name} •` : name;
   });
 
   onDocChanged(() => {
@@ -80,6 +102,8 @@ async function boot() {
   wireToolbar();
   initViewerEvents();
   initSearch();
+  initTools();
+  initEditTools();
 
   const params = new URLSearchParams(location.search);
   if (params.get('smoke')) {

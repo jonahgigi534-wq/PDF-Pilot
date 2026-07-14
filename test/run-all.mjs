@@ -200,6 +200,16 @@ test('createform: fields created with correct types', async () => {
   assert(sig, 'signature field exists in AcroForm');
 });
 
+test('esign: signature image embedded on page', async () => {
+  const out = path.join(output, 'signed.pdf');
+  fs.rmSync(out, { force: true });
+  runSmoke(path.join(samples, 'sample.pdf'), path.join(output, 't-esign.png'), `esign:${rel(out)}`);
+  const { PDFDocument, PDFName, PDFDict } = await import('pdf-lib');
+  const doc = await PDFDocument.load(fs.readFileSync(out));
+  const xobj = doc.getPage(0).node.Resources()?.lookup?.(PDFName.of('XObject'));
+  assert(xobj instanceof PDFDict && [...xobj.entries()].length >= 1, 'page 1 has an image XObject');
+});
+
 // ---------------- runner ----------------
 
 const filter = process.argv[2];

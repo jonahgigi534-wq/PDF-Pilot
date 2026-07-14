@@ -313,6 +313,33 @@ svg.anno-preview {
 
 #annot-color { margin: 4px; }
 
+/* ---------- signature dialog ---------- */
+.sig-dialog { min-width: 500px; }
+.sig-tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+.sig-tabs button.active { background: #2d5c9e; border-color: #3a6fbd; }
+.sig-panel { margin-bottom: 8px; }
+#sig-canvas {
+  display: block;
+  background: white;
+  border-radius: 4px;
+  border: 1px dashed #888;
+  cursor: crosshair;
+  touch-action: none;
+  margin-bottom: 6px;
+}
+#sig-text { width: 100%; margin-bottom: 8px; }
+#sig-preview {
+  min-height: 70px;
+  background: white;
+  color: #102040;
+  border-radius: 4px;
+  font: 44px "Segoe Script", "Ink Free", cursive;
+  padding: 8px 14px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+#sig-img { max-width: 100%; max-height: 140px; margin-top: 8px; background: white; border-radius: 4px; }
+
 /* ---------- form fields ---------- */
 .form-field,
 input.form-field, textarea.form-field, select.form-field {

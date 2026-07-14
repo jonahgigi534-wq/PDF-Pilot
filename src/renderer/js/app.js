@@ -11,6 +11,7 @@ import { initPageOps } from './pageops.js';
 import { initAnnotations } from './annotations.js';
 import { initForms } from './forms.js';
 import { initFormCreate } from './formcreate.js';
+import { initEsign } from './esign.js';
 import { save, saveAs, undo, redo, onHistoryChanged } from './document.js';
 
 const api = window.pdfpilot;
@@ -112,6 +113,7 @@ async function boot() {
   initAnnotations();
   initForms();
   initFormCreate();
+  initEsign();
 
   const params = new URLSearchParams(location.search);
   if (params.get('smoke')) {

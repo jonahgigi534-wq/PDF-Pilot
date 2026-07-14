@@ -12,6 +12,7 @@ import {
 import { getPageView } from './viewer.js';
 import { flushFormValues } from './forms.js';
 import { createFormField } from './formcreate.js';
+import { smokePlaceSignature } from './esign.js';
 
 const api = window.pdfpilot;
 
@@ -118,6 +119,10 @@ export async function runSmokeAction(action, params) {
       await saveTo(arg);
       break;
     }
+    case 'esign':
+      await smokePlaceSignature(1, 400, 600);
+      await saveTo(arg);
+      break;
     default:
       throw new Error(`unknown smoke action: ${name}`);
   }

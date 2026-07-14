@@ -183,6 +183,23 @@ test('fillform: values written into AcroForm fields', async () => {
   assert(form.getRadioGroup('size').getSelected() === 'L', 'radio selection');
 });
 
+test('createform: fields created with correct types', async () => {
+  const out = path.join(output, 'created-form.pdf');
+  fs.rmSync(out, { force: true });
+  runSmoke(path.join(samples, 'sample.pdf'), path.join(output, 't-createform.png'), `createform:${rel(out)}`);
+  const { PDFDocument, PDFName } = await import('pdf-lib');
+  const doc = await PDFDocument.load(fs.readFileSync(out));
+  const form = doc.getForm();
+  assert(form.getTextField('created_text'), 'text field exists');
+  assert(form.getCheckBox('created_check'), 'checkbox exists');
+  const dd = form.getDropdown('created_drop');
+  assert(dd.getOptions().join(',') === 'A,B,C', 'dropdown options');
+  const sig = form.acroForm.getAllFields().find(([f]) => {
+    return f.dict.get(PDFName.of('FT')) === PDFName.of('Sig');
+  });
+  assert(sig, 'signature field exists in AcroForm');
+});
+
 // ---------------- runner ----------------
 
 const filter = process.argv[2];

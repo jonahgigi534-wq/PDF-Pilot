@@ -273,6 +273,10 @@ body {
   background: rgba(255, 255, 255, 0.85);
   border: 1px dashed #888;
 }
+.field-marquee {
+  background: rgba(120, 160, 230, 0.25);
+  border: 1px dashed #4d8de8;
+}
 
 /* ---------- annotations ---------- */
 svg.anno-preview {

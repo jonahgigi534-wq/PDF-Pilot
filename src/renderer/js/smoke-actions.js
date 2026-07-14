@@ -11,6 +11,7 @@ import {
 } from './annotations.js';
 import { getPageView } from './viewer.js';
 import { flushFormValues } from './forms.js';
+import { createFormField } from './formcreate.js';
 
 const api = window.pdfpilot;
 
@@ -105,6 +106,15 @@ export async function runSmokeAction(action, params) {
       l.checked = true;
       l.dispatchEvent(new Event('change'));
       await flushFormValues();
+      await saveTo(arg);
+      break;
+    }
+    case 'createform': {
+      const view = await waitForPageRender(1);
+      await createFormField('text', 1, view, 100, 500, 320, 530, 'created_text');
+      await createFormField('checkbox', 1, await waitForPageRender(1), 100, 550, 130, 580, 'created_check');
+      await createFormField('dropdown', 1, await waitForPageRender(1), 100, 600, 260, 630, 'created_drop', ['A', 'B', 'C']);
+      await createFormField('signature', 1, await waitForPageRender(1), 100, 650, 320, 700, 'created_sig');
       await saveTo(arg);
       break;
     }

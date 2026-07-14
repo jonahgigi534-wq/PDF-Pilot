@@ -7,6 +7,7 @@ import {
 import { initSearch, runSearch } from './search.js';
 import { initTools } from './tools.js';
 import { initEditTools } from './edit-text.js';
+import { initPageOps } from './pageops.js';
 import { save, saveAs, undo, redo, onHistoryChanged } from './document.js';
 
 const api = window.pdfpilot;
@@ -104,6 +105,7 @@ async function boot() {
   initSearch();
   initTools();
   initEditTools();
+  initPageOps();
 
   const params = new URLSearchParams(location.search);
   if (params.get('smoke')) {

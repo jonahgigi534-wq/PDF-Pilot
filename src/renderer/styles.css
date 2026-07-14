@@ -118,6 +118,30 @@ body {
 }
 .thumb.current canvas { border-color: #4d8de8; }
 .thumb .thumb-label { color: #9a9ba3; margin-top: 4px; font-size: 12px; }
+.thumb { position: relative; }
+.thumb-actions {
+  display: none;
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  gap: 2px;
+  background: rgba(30, 31, 36, 0.92);
+  border: 1px solid #4a4b52;
+  border-radius: 4px;
+  padding: 2px;
+  z-index: 3;
+}
+.thumb:hover .thumb-actions { display: flex; }
+.thumb-actions button {
+  padding: 2px 5px;
+  font-size: 12px;
+  border: none;
+  background: transparent;
+}
+.thumb-actions button:hover { background: #46474f; }
+
+#tool-sidebar .action-btn { text-align: left; padding: 6px 8px; }
 
 #viewer-container {
   flex: 1;
@@ -249,6 +273,43 @@ body {
   background: rgba(255, 255, 255, 0.85);
   border: 1px dashed #888;
 }
+
+/* ---------- modal ---------- */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.modal-box {
+  background: #2e2f34;
+  border: 1px solid #4a4b52;
+  border-radius: 8px;
+  padding: 18px 20px;
+  min-width: 380px;
+  max-width: 520px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+}
+.modal-box h3 { margin: 0 0 8px; font-weight: 600; }
+.modal-message { color: #9a9ba3; margin: 0 0 12px; }
+.modal-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0;
+}
+.modal-row > span { flex: none; width: 130px; color: #c8c9cf; }
+.modal-row > input:not([type="checkbox"]), .modal-row > select { flex: 1; }
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+.modal-buttons .primary { background: #2d5c9e; border-color: #3a6fbd; }
 
 /* search highlights drawn by PDFPilot (not pdf.js) */
 .search-hit {

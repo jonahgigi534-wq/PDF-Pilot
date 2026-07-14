@@ -127,6 +127,14 @@ ipcMain.handle('dialog:open-pdfs', async (e, opts = {}) => {
   return result.canceled ? [] : result.filePaths;
 });
 
+ipcMain.handle('dialog:pick-dir', async (e, opts = {}) => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: opts.title || 'Choose folder',
+    properties: ['openDirectory', 'createDirectory'],
+  });
+  return result.canceled ? null : result.filePaths[0];
+});
+
 ipcMain.handle('dialog:save', async (e, opts = {}) => {
   const result = await dialog.showSaveDialog(mainWindow, {
     title: opts.title || 'Save',

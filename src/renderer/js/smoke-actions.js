@@ -5,6 +5,7 @@ import { runSearch } from './search.js';
 import { goToPage, setScale } from './viewer.js';
 import { smokeEditText, smokeInsertImage, smokeWhiteout } from './edit-text.js';
 import { undo, redo } from './document.js';
+import { movePage, rotatePage, deletePage, insertBlankAfter, mergePdfs, splitPdf } from './pageops.js';
 
 const api = window.pdfpilot;
 
@@ -42,6 +43,25 @@ export async function runSmokeAction(action, params) {
       await smokeWhiteout(1, 80, 320, 180, 420);
       await saveTo(arg);
       break;
+    case 'pageops':
+      // [P1..P5] -> blank after 1 -> rotate 3 (P2) -> move 6 (P5) up -> delete 4 (P3)
+      await insertBlankAfter(1);
+      await rotatePage(3);
+      await movePage(6, -1);
+      await deletePage(4);
+      await saveTo(arg);
+      break;
+    case 'merge': {
+      const [src, out] = arg.split('|');
+      await mergePdfs([src]);
+      await saveTo(out);
+      break;
+    }
+    case 'split': {
+      const [ranges, outDir] = arg.split('|');
+      await splitPdf(ranges, outDir);
+      break;
+    }
     default:
       throw new Error(`unknown smoke action: ${name}`);
   }

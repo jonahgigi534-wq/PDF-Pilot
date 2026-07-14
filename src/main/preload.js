@@ -2,6 +2,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('pdfpilot', {
   openPdfDialog: (opts) => ipcRenderer.invoke('dialog:open-pdfs', opts),
+  pickDirDialog: (opts) => ipcRenderer.invoke('dialog:pick-dir', opts),
   saveDialog: (opts) => ipcRenderer.invoke('dialog:save', opts),
   readFile: (filePath) => ipcRenderer.invoke('file:read', filePath),
   writeFile: (filePath, data) => ipcRenderer.invoke('file:write', filePath, data),

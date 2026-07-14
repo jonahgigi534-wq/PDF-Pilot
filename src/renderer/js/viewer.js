@@ -30,10 +30,12 @@ const thumbViews = new Map(); // pageNum -> { div, canvas, rendered }
 const docChangeListeners = [];
 const pageRenderedListeners = [];
 const currentPageListeners = [];
+const thumbBuiltListeners = [];
 
 export function onDocChanged(fn) { docChangeListeners.push(fn); }
 export function onPageRendered(fn) { pageRenderedListeners.push(fn); }
 export function onCurrentPageChanged(fn) { currentPageListeners.push(fn); }
+export function onThumbBuilt(fn) { thumbBuiltListeners.push(fn); }
 
 let loadingTask = null;
 
@@ -287,6 +289,7 @@ async function buildThumbnails() {
     label.textContent = String(n);
     div.append(canvas, label);
     div.addEventListener('click', () => goToPage(n));
+    for (const fn of thumbBuiltListeners) fn(n, div);
     rail.appendChild(div);
 
     thumbViews.set(n, { div, canvas, rendered: false });

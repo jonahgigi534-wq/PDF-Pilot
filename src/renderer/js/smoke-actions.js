@@ -18,6 +18,8 @@ import { protect, removePassword, smokeRedactText } from './security.js';
 import { exportImages } from './export-images.js';
 import { printDocument } from './print.js';
 import { runOcr } from './ocr.js';
+import { beginSession, reimport } from './wordmode.js';
+import { pdfToWord, wordToPdf, imagesToPdf } from './convert.js';
 
 const api = window.pdfpilot;
 
@@ -169,6 +171,29 @@ export async function runSmokeAction(action, params) {
       const [pagesArg, out] = arg.split('|');
       const pages = pagesArg.split(',').map((s) => parseInt(s, 10));
       await runOcr(pages);
+      await saveTo(out);
+      break;
+    }
+    case 'wordmode': {
+      await waitForPageRender(1);
+      const session = await beginSession('page', 2, { open: false });
+      if (!session) throw new Error('wordmode: session did not start');
+      await reimport();
+      await saveTo(arg);
+      break;
+    }
+    case 'pdf2word':
+      await pdfToWord(arg);
+      break;
+    case 'word2pdf': {
+      const [input, out] = arg.split('|');
+      await wordToPdf(input);
+      await saveTo(out);
+      break;
+    }
+    case 'img2pdf': {
+      const [img, out] = arg.split('|');
+      await imagesToPdf([img]);
       await saveTo(out);
       break;
     }

@@ -10,6 +10,12 @@ contextBridge.exposeInMainWorld('pdfpilot', {
   printPages: (payload) => ipcRenderer.invoke('print:pages', payload),
   ocrStatus: () => ipcRenderer.invoke('ocr:status'),
   ocrPage: (pngBytes) => ipcRenderer.invoke('ocr:page', pngBytes),
+  sofficeStatus: () => ipcRenderer.invoke('soffice:status'),
+  sofficeLocate: () => ipcRenderer.invoke('soffice:locate'),
+  sofficeInstall: () => ipcRenderer.invoke('soffice:install-winget'),
+  sofficeConvert: (opts) => ipcRenderer.invoke('soffice:convert', opts),
+  tempWrite: (data, ext) => ipcRenderer.invoke('temp:write', data, ext),
+  openPath: (p) => ipcRenderer.invoke('shell:open-path', p),
   smokeRendered: (info) => ipcRenderer.send('smoke:rendered', info),
   smokeError: (msg) => ipcRenderer.send('smoke:error', msg),
 });

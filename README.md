@@ -68,6 +68,12 @@ Ctrl+Y) until you close the app.
 - **Image** — insert a PNG/JPG, then click where it should go.
 - **White-out** — drag a rectangle to cover content with white (visual cover
   only; use **Redact** to permanently remove content).
+- **Word mode…** — for heavy edits (rewriting paragraphs, reformatting). The
+  current page or whole document is converted to .docx via LibreOffice and
+  opened in your word processor; edit, save, then click **Re-import into
+  PDF** in the yellow bar. Because this is a full round-trip, complex
+  layouts may shift slightly — the UI warns you. Requires LibreOffice (see
+  below).
 
 ### Pages
 - Hover a thumbnail for per-page actions: move up/down, rotate 90°, insert a
@@ -117,15 +123,19 @@ signature image; it is not certificate-based digital signing.
   redactions**. Affected pages are re-rendered as images with the areas
   blacked out, so the underlying text/graphics are *permanently destroyed*,
   not just covered. Double-click a pending mark to remove it before applying.
+- **Convert…** — *PDF → Word (.docx)*, *Word/ODT/RTF → PDF* (both via
+  LibreOffice), and *Images → PDF* (built in, no LibreOffice needed).
 - **Print** (Ctrl+P) — sends rendered pages to the system print dialog.
 
-## Planned (not yet built)
-- **"Edit in Word mode"** and **PDF ↔ Word conversion** via headless
-  LibreOffice round-trips (PDFPilot will detect an installed LibreOffice and
-  offer a one-click install if it's missing).
+### About LibreOffice
+Word mode and PDF ↔ Word conversion use headless LibreOffice (free, open
+source) running locally. PDFPilot looks for an installed copy automatically;
+if none is found, it offers to install it for you via Windows' built-in
+`winget` package manager (~350 MB, user-approved), or you can point it at an
+existing `soffice.exe`. Everything else in PDFPilot works without it.
 
-Note: OCR and (when it lands) Word-mode conversion take a few seconds per
-page — all processing happens locally on your machine, never in the cloud.
+Note: OCR and Word-mode conversion take a few seconds per page — all
+processing happens locally on your machine, never in the cloud.
 
 ## Notes & limitations
 - Inline text editing matches the original with the closest standard font

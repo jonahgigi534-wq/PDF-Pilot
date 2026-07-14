@@ -313,6 +313,40 @@ test('ocr-fallback: Tesseract.js used when the sidecar is unavailable', async ()
   assert(/MARKER/i.test(text), `fallback OCR found the marker, got: ${text.slice(0, 200)}`);
 });
 
+const MOCK_SOFFICE = { PDFPILOT_SOFFICE: path.join(root, 'test', 'mock-soffice.cmd') };
+
+test('wordmode: page round-trips through soffice and is replaced', async () => {
+  const out = path.join(output, 'wordmode.pdf');
+  fs.rmSync(out, { force: true });
+  runSmoke(path.join(samples, 'sample.pdf'), path.join(output, 't-wordmode.png'), `wordmode:${rel(out)}`, [], MOCK_SOFFICE);
+  assert(await pageCount(out) === 5, 'page count preserved');
+  assert((await pageText(out, 2)).includes('WORDMODE-EDITED-PAGE'), 'page 2 replaced by re-imported edit');
+  assert((await pageText(out, 1)).includes('MARKER-P1'), 'page 1 untouched');
+  assert((await pageText(out, 3)).includes('MARKER-P3'), 'page 3 untouched');
+});
+
+test('convert: pdf→word, word→pdf, images→pdf', async () => {
+  const docxOut = path.join(output, 'converted.docx');
+  const wordIn = path.join(output, 'dummy.docx');
+  const pdfOut = path.join(output, 'from-word.pdf');
+  const imgOut = path.join(output, 'from-image.pdf');
+  for (const f of [docxOut, pdfOut, imgOut]) fs.rmSync(f, { force: true });
+  fs.writeFileSync(wordIn, 'not a real docx — mock ignores content');
+
+  runSmoke(path.join(samples, 'sample.pdf'), path.join(output, 't-pdf2word.png'), `pdf2word:${rel(docxOut)}`, [], MOCK_SOFFICE);
+  assert(fs.readFileSync(docxOut, 'utf8').startsWith('MOCKDOCX'), 'pdf→word wrote the converted docx');
+
+  runSmoke(path.join(samples, 'sample.pdf'), path.join(output, 't-word2pdf.png'), `word2pdf:${rel(wordIn)}|${rel(pdfOut)}`, [], MOCK_SOFFICE);
+  assert((await pageText(pdfOut, 1)).includes('WORDMODE-EDITED-PAGE'), 'word→pdf opened converted PDF');
+
+  runSmoke(path.join(samples, 'sample.pdf'), path.join(output, 't-img2pdf.png'), `img2pdf:build-resources/icon.png|${rel(imgOut)}`, [], MOCK_SOFFICE);
+  assert(await pageCount(imgOut) === 1, 'images→pdf produced one page');
+  const { PDFDocument, PDFName, PDFDict } = await import('pdf-lib');
+  const doc = await PDFDocument.load(fs.readFileSync(imgOut));
+  const xobj = doc.getPage(0).node.Resources()?.lookup?.(PDFName.of('XObject'));
+  assert(xobj instanceof PDFDict && [...xobj.entries()].length === 1, 'image embedded');
+});
+
 test('print: pages render and reach the print window (dry run)', async () => {
   runSmoke(path.join(samples, 'sample.pdf'), path.join(output, 't-print.png'), 'printprep');
 });

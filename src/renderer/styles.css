@@ -201,6 +201,19 @@ body {
   padding: 12px;
 }
 
+#wordmode-bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: #4a3d17;
+  border-top: 1px solid #6b5a24;
+  color: #f4e6b8;
+}
+#wordmode-bar button { background: #6b5a24; border-color: #8a7530; }
+#wordmode-text { flex: 1; }
+
 #statusbar {
   flex: none;
   padding: 3px 10px;

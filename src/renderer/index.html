@@ -41,6 +41,7 @@
       <button class="tool-btn" data-tool="edit-text" title="Click any text to edit it in place">Edit text</button>
       <button class="tool-btn" data-tool="insert-image" title="Insert an image onto the page">Image</button>
       <button class="tool-btn" data-tool="whiteout" title="Cover an area with white">White-out</button>
+      <button class="action-btn" id="btn-wordmode" title="Heavy edits: round-trip through your word processor">Word mode…</button>
       <div class="tool-group-label">Annotate</div>
       <button class="tool-btn" data-tool="highlight" title="Select text to highlight it">Highlight</button>
       <button class="tool-btn" data-tool="underline" title="Select text to underline it">Underline</button>
@@ -71,6 +72,7 @@
       <div class="tool-group-label">Tools</div>
       <button class="action-btn" id="btn-compress" title="Reduce file size">Compress…</button>
       <button class="action-btn" id="btn-ocr" title="Recognise text in scanned pages (runs locally)">OCR…</button>
+      <button class="action-btn" id="btn-convert" title="PDF ↔ Word, images → PDF">Convert…</button>
       <button class="action-btn" id="btn-export-images" title="Export pages as PNG/JPG">Export images…</button>
       <button class="action-btn" id="btn-protect" title="Set an open password">Protect…</button>
       <button class="action-btn" id="btn-remove-pw" title="Remove the open password">Remove password</button>
@@ -87,6 +89,12 @@
       </div>
     </div>
     <div id="side-panel" class="hidden"></div>
+  </div>
+
+  <div id="wordmode-bar" class="hidden">
+    <span id="wordmode-text"></span>
+    <button id="wordmode-reimport">Re-import into PDF</button>
+    <button id="wordmode-cancel">Cancel</button>
   </div>
 
   <div id="statusbar">

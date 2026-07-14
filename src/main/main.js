@@ -1,4 +1,4 @@
-const { app, BrowserWindow, protocol, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, protocol, ipcMain, dialog, shell } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 const { spawn } = require('node:child_process');
@@ -257,6 +257,115 @@ ipcMain.handle('ocr:page', async (e, pngBytes) => {
     fs.rmSync(file, { force: true });
   }
 });
+
+// ---------------- LibreOffice (Word mode + conversion) ----------------
+
+const settingsFile = () => path.join(app.getPath('userData'), 'settings.json');
+
+function readSettings() {
+  try {
+    return JSON.parse(fs.readFileSync(settingsFile(), 'utf8'));
+  } catch {
+    return {};
+  }
+}
+
+function writeSettings(patch) {
+  const s = { ...readSettings(), ...patch };
+  fs.mkdirSync(path.dirname(settingsFile()), { recursive: true });
+  fs.writeFileSync(settingsFile(), JSON.stringify(s, null, 2));
+}
+
+function findSoffice() {
+  const candidates = [
+    process.env.PDFPILOT_SOFFICE, // tests / overrides
+    readSettings().sofficePath,
+    'C:\\Program Files\\LibreOffice\\program\\soffice.exe',
+    'C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe',
+  ];
+  for (const c of candidates) {
+    if (c && fs.existsSync(c)) return c;
+  }
+  return null;
+}
+
+function spawnTool(cmd, args, timeoutMs = 300000) {
+  return new Promise((resolve) => {
+    // .cmd shims (used by tests) need to go through the shell.
+    const viaCmd = /\.(cmd|bat)$/i.test(cmd);
+    const proc = viaCmd
+      ? spawn('cmd.exe', ['/c', cmd, ...args], { windowsHide: true })
+      : spawn(cmd, args, { windowsHide: true });
+    let out = '';
+    const timer = setTimeout(() => {
+      proc.kill();
+      resolve({ code: -1, out: out + '\n[timed out]' });
+    }, timeoutMs);
+    proc.stdout.on('data', (d) => { out += d; });
+    proc.stderr.on('data', (d) => { out += d; });
+    proc.on('exit', (code) => {
+      clearTimeout(timer);
+      resolve({ code, out });
+    });
+    proc.on('error', (err) => {
+      clearTimeout(timer);
+      resolve({ code: -1, out: String(err) });
+    });
+  });
+}
+
+ipcMain.handle('soffice:status', () => {
+  const found = findSoffice();
+  return { found: !!found, path: found };
+});
+
+ipcMain.handle('soffice:locate', async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: 'Locate soffice.exe (LibreOffice)',
+    filters: [{ name: 'soffice.exe', extensions: ['exe'] }],
+    properties: ['openFile'],
+  });
+  if (result.canceled) return { found: !!findSoffice() };
+  writeSettings({ sofficePath: result.filePaths[0] });
+  return { found: true, path: result.filePaths[0] };
+});
+
+// User-initiated silent install via winget (Windows 11 ships winget).
+ipcMain.handle('soffice:install-winget', async () => {
+  const res = await spawnTool('winget.exe', [
+    'install', '-e', '--id', 'TheDocumentFoundation.LibreOffice',
+    '--silent', '--accept-source-agreements', '--accept-package-agreements',
+  ], 15 * 60 * 1000);
+  return { ok: res.code === 0, found: !!findSoffice(), log: res.out.slice(-2000) };
+});
+
+// Converts a file with headless LibreOffice. to: 'docx' | 'pdf'.
+ipcMain.handle('soffice:convert', async (e, { input, to }) => {
+  const soffice = findSoffice();
+  if (!soffice) return { ok: false, notFound: true };
+  const outDir = fs.mkdtempSync(path.join(app.getPath('temp'), 'pdfpilot-convert-'));
+  const args = ['--headless', '--norestore'];
+  if (input.toLowerCase().endsWith('.pdf')) {
+    args.push('--infilter=writer_pdf_import'); // import PDFs into Writer, not Draw
+  }
+  args.push('--convert-to', to, '--outdir', outDir, input);
+  const res = await spawnTool(soffice, args);
+  const expected = path.join(outDir, path.basename(input, path.extname(input)) + '.' + to);
+  if (!fs.existsSync(expected)) {
+    return { ok: false, error: `conversion produced no output (exit ${res.code}): ${res.out.slice(-800)}` };
+  }
+  return { ok: true, path: expected };
+});
+
+ipcMain.handle('temp:write', async (e, data, ext) => {
+  const dir = path.join(app.getPath('temp'), 'pdfpilot-wordmode');
+  fs.mkdirSync(dir, { recursive: true });
+  const file = path.join(dir, `pdfpilot-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`);
+  fs.writeFileSync(file, Buffer.from(data));
+  return file;
+});
+
+ipcMain.handle('shell:open-path', (e, p) => shell.openPath(p));
 
 // Print: receives rendered page images, shows the system print dialog from a
 // hidden window. dryRun (used by tests) skips the dialog and reports success.

@@ -35,6 +35,12 @@ export function showModal({ title, message, fields = [], okText = 'OK', cancelTe
           input.appendChild(o);
         }
         if (f.value != null) input.value = f.value;
+      } else if (f.type === 'textarea') {
+        input = document.createElement('textarea');
+        input.rows = f.rows || 4;
+        input.value = f.value ?? '';
+        if (f.placeholder) input.placeholder = f.placeholder;
+        row.classList.add('modal-row-textarea');
       } else if (f.type === 'checkbox') {
         input = document.createElement('input');
         input.type = 'checkbox';
@@ -79,7 +85,7 @@ export function showModal({ title, message, fields = [], okText = 'OK', cancelTe
       if (e.target === backdrop) close(null);
     });
     box.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && e.target.tagName !== 'SELECT') {
+      if (e.key === 'Enter' && !['SELECT', 'TEXTAREA'].includes(e.target.tagName)) {
         e.preventDefault();
         close(collect());
       }

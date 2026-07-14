@@ -125,6 +125,51 @@ test('split: writes range files', async () => {
   assert((await pageText(path.join(outDir, 'sample-part2.pdf'), 1)).includes('MARKER-P3'), 'part2 starts at page 3');
 });
 
+test('annotations: markup keeps text and adds highlight blend', async () => {
+  const out = path.join(output, 'annot-markup.pdf');
+  fs.rmSync(out, { force: true });
+  runSmoke(path.join(samples, 'sample.pdf'), path.join(output, 't-annot-markup.png'), `annot-markup:${rel(out)}`);
+  const text = await pageText(out, 1);
+  assert(text.includes('quick brown fox'), 'highlighted text still extractable');
+  assert(text.includes('MARKER-P1'), 'struck text still extractable');
+  const { PDFDocument, PDFName, PDFDict } = await import('pdf-lib');
+  const doc = await PDFDocument.load(fs.readFileSync(out));
+  const res = doc.getPage(0).node.Resources();
+  const egs = res?.lookup?.(PDFName.of('ExtGState'));
+  let hasMultiply = false;
+  if (egs instanceof PDFDict) {
+    for (const [, ref] of egs.entries()) {
+      const gs = doc.context.lookup(ref);
+      if (gs instanceof PDFDict && gs.get(PDFName.of('BM')) === PDFName.of('Multiply')) {
+        hasMultiply = true;
+      }
+    }
+  }
+  assert(hasMultiply, 'highlight uses Multiply blend mode in ExtGState');
+});
+
+test('annotations: sticky note is a real /Text annotation', async () => {
+  const out = path.join(output, 'annot-note.pdf');
+  fs.rmSync(out, { force: true });
+  runSmoke(path.join(samples, 'sample.pdf'), path.join(output, 't-annot-note.png'), `annot-note:${rel(out)}`);
+  const found = await withDoc(out, async (doc) => {
+    const page = await doc.getPage(1);
+    const annots = await page.getAnnotations();
+    return annots.find((a) => a.subtype === 'Text');
+  });
+  assert(found, 'text annotation present');
+  const contents = found.contentsObj?.str ?? found.contents;
+  assert(contents === 'Smoke note text', `note contents preserved, got: ${contents}`);
+});
+
+test('annotations: drawing/shapes/textbox render into page', async () => {
+  const out = path.join(output, 'annot-drawing.pdf');
+  fs.rmSync(out, { force: true });
+  runSmoke(path.join(samples, 'sample.pdf'), path.join(output, 't-annot-drawing.png'), `annot-drawing:${rel(out)}`);
+  const text = await pageText(out, 1);
+  assert(text.includes('TEXTBOX-99-SMOKE'), 'text box content present');
+});
+
 // ---------------- runner ----------------
 
 const filter = process.argv[2];

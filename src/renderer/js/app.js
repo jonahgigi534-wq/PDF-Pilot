@@ -13,6 +13,7 @@ import { initForms } from './forms.js';
 import { initFormCreate } from './formcreate.js';
 import { initEsign } from './esign.js';
 import { initSecurity } from './security.js';
+import { initOcr } from './ocr.js';
 import { save, saveAs, undo, redo, onHistoryChanged } from './document.js';
 import { printDocument } from './print.js';
 
@@ -120,6 +121,7 @@ async function boot() {
   initFormCreate();
   initEsign();
   initSecurity();
+  initOcr();
 
   const params = new URLSearchParams(location.search);
   if (params.get('smoke')) {

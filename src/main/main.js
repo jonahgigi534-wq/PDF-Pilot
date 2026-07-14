@@ -1,6 +1,8 @@
 const { app, BrowserWindow, protocol, ipcMain, dialog } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
+const { spawn } = require('node:child_process');
+const readline = require('node:readline');
 
 const DIST = path.join(__dirname, '..', '..', 'dist', 'renderer');
 
@@ -159,6 +161,101 @@ ipcMain.handle('file:write', async (e, filePath, data) => {
 
 ipcMain.handle('window:set-title', (e, title) => {
   if (mainWindow) mainWindow.setTitle(title ? `${title} — PDFPilot` : 'PDFPilot');
+});
+
+// ---------------- OCR sidecar ----------------
+// Long-running Python process (RapidOCR + OpenCV) speaking JSON-lines.
+// Dev: sidecar/venv python. Packaged: resources/sidecar/pdfpilot-ocr.exe.
+
+let sidecar = null; // { proc, pending: Map<id, {resolve, reject, timer}>, nextId }
+
+function sidecarCommand() {
+  if (app.isPackaged) {
+    return { cmd: path.join(process.resourcesPath, 'sidecar', 'pdfpilot-ocr.exe'), args: [] };
+  }
+  const root = path.join(__dirname, '..', '..');
+  return {
+    cmd: path.join(root, 'sidecar', 'venv', 'Scripts', 'python.exe'),
+    args: [path.join(root, 'sidecar', 'ocr_worker.py')],
+  };
+}
+
+function ensureSidecar() {
+  if (sidecar) return sidecar;
+  if (process.env.PDFPILOT_NO_SIDECAR) return null; // fallback testing
+  const { cmd, args } = sidecarCommand();
+  if (!fs.existsSync(cmd)) return null;
+
+  const proc = spawn(cmd, args, { stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true });
+  const s = { proc, pending: new Map(), nextId: 1 };
+
+  readline.createInterface({ input: proc.stdout }).on('line', (line) => {
+    let msg;
+    try {
+      msg = JSON.parse(line);
+    } catch {
+      return;
+    }
+    const waiter = s.pending.get(msg.id);
+    if (waiter) {
+      s.pending.delete(msg.id);
+      clearTimeout(waiter.timer);
+      waiter.resolve(msg);
+    }
+  });
+  proc.stderr.on('data', (d) => console.error('[ocr-sidecar]', String(d).trim()));
+  proc.on('exit', (code) => {
+    for (const waiter of s.pending.values()) {
+      clearTimeout(waiter.timer);
+      waiter.reject(new Error(`OCR sidecar exited (code ${code})`));
+    }
+    if (sidecar === s) sidecar = null;
+  });
+
+  s.request = (payload, timeoutMs = 180000) =>
+    new Promise((resolve, reject) => {
+      const id = s.nextId++;
+      const timer = setTimeout(() => {
+        s.pending.delete(id);
+        reject(new Error('OCR request timed out'));
+      }, timeoutMs);
+      s.pending.set(id, { resolve, reject, timer });
+      proc.stdin.write(JSON.stringify({ id, ...payload }) + '\n');
+    });
+
+  sidecar = s;
+  return s;
+}
+
+app.on('will-quit', () => {
+  sidecar?.proc.kill();
+});
+
+ipcMain.handle('ocr:status', async () => {
+  const s = ensureSidecar();
+  if (!s) return { available: false };
+  try {
+    const resp = await s.request({ op: 'ping' }, 30000);
+    return { available: !!resp.ok, engine: resp.engine };
+  } catch (err) {
+    return { available: false, error: err.message };
+  }
+});
+
+ipcMain.handle('ocr:page', async (e, pngBytes) => {
+  const s = ensureSidecar();
+  if (!s) return { ok: false, unavailable: true };
+  const tmpDir = path.join(app.getPath('temp'), 'pdfpilot-ocr');
+  fs.mkdirSync(tmpDir, { recursive: true });
+  const file = path.join(tmpDir, `page-${Date.now()}-${Math.random().toString(36).slice(2)}.png`);
+  fs.writeFileSync(file, Buffer.from(pngBytes));
+  try {
+    return await s.request({ op: 'ocr', image: file });
+  } catch (err) {
+    return { ok: false, error: err.message };
+  } finally {
+    fs.rmSync(file, { force: true });
+  }
 });
 
 // Print: receives rendered page images, shows the system print dialog from a

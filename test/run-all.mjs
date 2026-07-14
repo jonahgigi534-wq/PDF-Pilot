@@ -16,10 +16,15 @@ fs.mkdirSync(output, { recursive: true });
 
 const rel = (p) => path.relative(root, p).replaceAll('\\', '/');
 
-export function runSmoke(inputPdf, outPng, action, extraArgs = []) {
+export function runSmoke(inputPdf, outPng, action, extraArgs = [], env = {}) {
   const args = ['.', '--smoke', inputPdf, outPng, ...extraArgs];
   if (action) args.push('--action', action);
-  const res = spawnSync(electronPath, args, { cwd: root, encoding: 'utf8', timeout: 90000 });
+  const res = spawnSync(electronPath, args, {
+    cwd: root,
+    encoding: 'utf8',
+    timeout: 180000,
+    env: { ...process.env, ...env },
+  });
   const out = (res.stdout || '') + (res.stderr || '');
   if (!out.includes('SMOKE_OK')) {
     throw new Error(`smoke failed (${action || 'render'}):\n${out}`);
@@ -277,6 +282,35 @@ test('exportimages: writes PNG files', async () => {
     assert(bytes[0] === 0x89 && bytes[1] === 0x50, `${f} is a PNG`);
     assert(bytes.length > 5000, `${f} has content`);
   }
+});
+
+test('ocr: sidecar adds searchable invisible text to a scanned PDF', async () => {
+  const scanned = path.join(output, 'scanned.pdf');
+  const out = path.join(output, 'ocr-out.pdf');
+  fs.rmSync(scanned, { force: true });
+  fs.rmSync(out, { force: true });
+
+  runSmoke(path.join(samples, 'sample.pdf'), path.join(output, 't-scanned.png'), `make-scanned:${rel(scanned)}`);
+  assert((await pageText(scanned, 1)).trim() === '', 'scanned PDF starts with no text layer');
+
+  runSmoke(scanned, path.join(output, 't-ocr.png'), `ocr:1|${rel(out)}`);
+  const text = await pageText(out, 1);
+  assert(/MARKER[-–]?P1/i.test(text), `OCR text contains the page marker, got: ${text.slice(0, 200)}`);
+  assert(/quick\s?brown\s?fox/i.test(text.replace(/\s+/g, ' ')), 'OCR captured the paragraph text');
+  assert((await pageText(out, 2)).trim() === '', 'non-OCRed pages unchanged');
+});
+
+test('ocr-fallback: Tesseract.js used when the sidecar is unavailable', async () => {
+  const scanned = path.join(output, 'scanned.pdf');
+  const out = path.join(output, 'ocr-fallback-out.pdf');
+  fs.rmSync(out, { force: true });
+  assert(fs.existsSync(scanned), 'scanned.pdf exists (ocr test ran first)');
+
+  runSmoke(scanned, path.join(output, 't-ocr-fallback.png'), `ocr:1|${rel(out)}`, [], {
+    PDFPILOT_NO_SIDECAR: '1',
+  });
+  const text = await pageText(out, 1);
+  assert(/MARKER/i.test(text), `fallback OCR found the marker, got: ${text.slice(0, 200)}`);
 });
 
 test('print: pages render and reach the print window (dry run)', async () => {

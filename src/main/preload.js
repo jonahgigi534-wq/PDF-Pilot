@@ -8,6 +8,8 @@ contextBridge.exposeInMainWorld('pdfpilot', {
   writeFile: (filePath, data) => ipcRenderer.invoke('file:write', filePath, data),
   setTitle: (title) => ipcRenderer.invoke('window:set-title', title),
   printPages: (payload) => ipcRenderer.invoke('print:pages', payload),
+  ocrStatus: () => ipcRenderer.invoke('ocr:status'),
+  ocrPage: (pngBytes) => ipcRenderer.invoke('ocr:page', pngBytes),
   smokeRendered: (info) => ipcRenderer.send('smoke:rendered', info),
   smokeError: (msg) => ipcRenderer.send('smoke:error', msg),
 });

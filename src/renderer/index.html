@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; script-src 'self'" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; script-src 'self' 'wasm-unsafe-eval' blob:; worker-src 'self' blob:; connect-src 'self' data: blob:" />
   <title>PDFPilot</title>
   <link rel="stylesheet" href="./styles.css" />
 </head>
@@ -70,6 +70,7 @@
       <button class="action-btn" id="btn-split" title="Split this document into multiple files">Split…</button>
       <div class="tool-group-label">Tools</div>
       <button class="action-btn" id="btn-compress" title="Reduce file size">Compress…</button>
+      <button class="action-btn" id="btn-ocr" title="Recognise text in scanned pages (runs locally)">OCR…</button>
       <button class="action-btn" id="btn-export-images" title="Export pages as PNG/JPG">Export images…</button>
       <button class="action-btn" id="btn-protect" title="Set an open password">Protect…</button>
       <button class="action-btn" id="btn-remove-pw" title="Remove the open password">Remove password</button>

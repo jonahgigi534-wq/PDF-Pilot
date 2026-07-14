@@ -10,15 +10,18 @@
     "start": "npm run build && electron .",
     "smoke": "npm run build && electron . --smoke",
     "test": "node test/run-all.mjs",
-    "dist": "npm run build && electron-builder --win"
+    "dist": "npm run build && electron-builder --win",
+    "build:sidecar": "sidecar\u000benvScriptspyinstaller --noconfirm --onedir --console --name pdfpilot-ocr --collect-all rapidocr_onnxruntime --distpath sidecar/dist --workpath sidecar/build --specpath sidecar sidecar/ocr_worker.py"
   },
   "devDependencies": {
     "@cantoo/pdf-lib": "^2.7.3",
+    "@tesseract.js-data/eng": "^1.0.0",
     "electron": "^43.1.0",
     "electron-builder": "^26.15.3",
     "esbuild": "^0.28.1",
     "pdf-lib": "^1.17.1",
-    "pdfjs-dist": "^6.1.200"
+    "pdfjs-dist": "^6.1.200",
+    "tesseract.js": "^7.0.0"
   },
   "build": {
     "appId": "org.pdfpilot.app",
@@ -50,6 +53,12 @@
       "perMachine": false,
       "artifactName": "PDFPilot-Setup-${version}.${ext}",
       "shortcutName": "PDFPilot"
-    }
+    },
+    "extraResources": [
+      {
+        "from": "sidecar/dist/pdfpilot-ocr",
+        "to": "sidecar"
+      }
+    ]
   }
 }

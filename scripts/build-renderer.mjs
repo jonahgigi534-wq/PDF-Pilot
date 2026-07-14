@@ -43,6 +43,27 @@ for (const dir of ['cmaps', 'standard_fonts', 'wasm', 'iccs']) {
   copyDirOnce(path.join(pdfjsDir, dir), path.join(dist, 'pdfjs', dir));
 }
 
+// Tesseract.js fallback assets (worker, wasm cores, English language data)
+// staged locally so OCR fallback works fully offline.
+copyFile(
+  path.join(root, 'node_modules', 'tesseract.js', 'dist', 'worker.min.js'),
+  path.join(dist, 'tesseract', 'worker.min.js'),
+);
+{
+  const coreSrc = path.join(root, 'node_modules', 'tesseract.js-core');
+  const coreDest = path.join(dist, 'tesseract', 'core');
+  fs.mkdirSync(coreDest, { recursive: true });
+  for (const f of fs.readdirSync(coreSrc)) {
+    if (f.endsWith('.js') || f.endsWith('.wasm')) {
+      copyFile(path.join(coreSrc, f), path.join(coreDest, f));
+    }
+  }
+}
+copyFile(
+  path.join(root, 'node_modules', '@tesseract.js-data', 'eng', '4.0.0', 'eng.traineddata.gz'),
+  path.join(dist, 'tesseract', 'lang', 'eng.traineddata.gz'),
+);
+
 // Static assets (icons, fonts) shipped with the app.
 const assetsSrc = path.join(root, 'assets');
 if (fs.existsSync(assetsSrc)) {

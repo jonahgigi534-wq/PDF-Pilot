@@ -30,8 +30,20 @@ node scripts/make-icon.mjs   # regenerate the app icon (optional)
 npm run dist         # build the Windows installer into release/
 ```
 
-Requires Node.js 20+ on Windows. No Python or other runtime is needed for the
-features below.
+Requires Node.js 20+ on Windows. To build the OCR engine (optional but
+recommended — without it OCR uses the slower Tesseract.js fallback), you need
+Python 3.10+ once, to build the self-contained sidecar:
+
+```
+cd sidecar
+python -m venv venv
+venv\Scripts\pip install rapidocr-onnxruntime opencv-python-headless pyinstaller
+cd ..
+npm run build:sidecar    # produces sidecar/dist/pdfpilot-ocr (bundled into the installer)
+```
+
+End users never need Python — the sidecar is a self-contained executable
+inside the installer.
 
 ## Using PDFPilot
 
@@ -90,6 +102,13 @@ signature image; it is not certificate-based digital signing.
 ### Tools
 - **Compress…** — *Optimize* is lossless; *Rasterize* converts pages to
   images (much smaller for scans, but text/forms are flattened).
+- **OCR…** — makes scanned/image-only pages searchable and selectable. Pages
+  are preprocessed with OpenCV (denoise, deskew, upscale) and read by
+  PaddleOCR's PP-OCR models running on ONNX Runtime, all inside a bundled
+  local engine; recognised text is added as an invisible layer over the scan,
+  so the page looks exactly the same but search, selection, and copy work.
+  If the bundled engine is missing, a pure-JS Tesseract fallback runs
+  instead. Expect a few seconds per page — everything is processed locally.
 - **Export images…** — save pages as PNG/JPG at 96–300 DPI.
 - **Protect…** — set an open password (AES). **Remove password** decrypts
   (you need the current password). Don't lose the password — there is no
@@ -101,16 +120,12 @@ signature image; it is not certificate-based digital signing.
 - **Print** (Ctrl+P) — sends rendered pages to the system print dialog.
 
 ## Planned (not yet built)
-These are coming in a later phase because they add heavyweight local
-processing to the installer:
-- **OCR for scanned PDFs** (OpenCV preprocessing + PaddleOCR/docTR, with a
-  Tesseract.js fallback) producing an invisible, selectable text layer.
 - **"Edit in Word mode"** and **PDF ↔ Word conversion** via headless
-  LibreOffice round-trips.
+  LibreOffice round-trips (PDFPilot will detect an installed LibreOffice and
+  offer a one-click install if it's missing).
 
-Note: when these land, OCR and Word-mode conversions may take a few seconds
-per page — all processing happens locally on your machine, never in the
-cloud.
+Note: OCR and (when it lands) Word-mode conversion take a few seconds per
+page — all processing happens locally on your machine, never in the cloud.
 
 ## Notes & limitations
 - Inline text editing matches the original with the closest standard font

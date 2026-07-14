@@ -17,6 +17,7 @@ import { compress } from './compress.js';
 import { protect, removePassword, smokeRedactText } from './security.js';
 import { exportImages } from './export-images.js';
 import { printDocument } from './print.js';
+import { runOcr } from './ocr.js';
 
 const api = window.pdfpilot;
 
@@ -156,6 +157,19 @@ export async function runSmokeAction(action, params) {
     case 'exportimages': {
       await waitForPageRender(1);
       await exportImages('png', 96, [0, 1], arg);
+      break;
+    }
+    case 'make-scanned':
+      // Produces an image-only PDF (no text layer) for OCR tests.
+      await waitForPageRender(1);
+      await compress('rasterize', 150, 0.9);
+      await saveTo(arg);
+      break;
+    case 'ocr': {
+      const [pagesArg, out] = arg.split('|');
+      const pages = pagesArg.split(',').map((s) => parseInt(s, 10));
+      await runOcr(pages);
+      await saveTo(out);
       break;
     }
     case 'exporticon': {

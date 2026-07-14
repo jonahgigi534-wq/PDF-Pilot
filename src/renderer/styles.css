@@ -277,6 +277,19 @@ body {
   background: rgba(120, 160, 230, 0.25);
   border: 1px dashed #4d8de8;
 }
+.redact-marquee {
+  background: rgba(0, 0, 0, 0.45);
+  border: 2px solid #d02020;
+}
+.redact-mark {
+  position: absolute;
+  z-index: 4;
+  background: rgba(0, 0, 0, 0.55);
+  border: 2px solid #d02020;
+  box-sizing: border-box;
+  pointer-events: auto;
+  cursor: pointer;
+}
 
 /* ---------- annotations ---------- */
 svg.anno-preview {

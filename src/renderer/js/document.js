@@ -34,8 +34,12 @@ export async function applyEdit(label, mutator) {
 }
 
 // Lower-level variant for operations that produce bytes directly.
-export async function applyBytes(label, fn) {
+export async function applyBytes(label, fn, { allowEncrypted = false } = {}) {
   if (!state.bytes) return;
+  if (state.docPassword && !allowEncrypted) {
+    setStatus('This PDF is password-protected — use Tools → Remove password before editing');
+    return;
+  }
   await runPreEditHooks();
   setStatus(`${label}…`);
   try {

@@ -16,8 +16,8 @@ fs.mkdirSync(output, { recursive: true });
 
 const rel = (p) => path.relative(root, p).replaceAll('\\', '/');
 
-export function runSmoke(inputPdf, outPng, action) {
-  const args = ['.', '--smoke', inputPdf, outPng];
+export function runSmoke(inputPdf, outPng, action, extraArgs = []) {
+  const args = ['.', '--smoke', inputPdf, outPng, ...extraArgs];
   if (action) args.push('--action', action);
   const res = spawnSync(electronPath, args, { cwd: root, encoding: 'utf8', timeout: 90000 });
   const out = (res.stdout || '') + (res.stderr || '');
@@ -208,6 +208,75 @@ test('esign: signature image embedded on page', async () => {
   const doc = await PDFDocument.load(fs.readFileSync(out));
   const xobj = doc.getPage(0).node.Resources()?.lookup?.(PDFName.of('XObject'));
   assert(xobj instanceof PDFDict && [...xobj.entries()].length >= 1, 'page 1 has an image XObject');
+});
+
+test('compress: lossless keeps text, rasterize flattens it', async () => {
+  const outA = path.join(output, 'compressed-lossless.pdf');
+  const outB = path.join(output, 'compressed-lossy.pdf');
+  fs.rmSync(outA, { force: true });
+  fs.rmSync(outB, { force: true });
+  runSmoke(path.join(samples, 'sample.pdf'), path.join(output, 't-compress1.png'), `compress-lossless:${rel(outA)}`);
+  runSmoke(path.join(samples, 'sample.pdf'), path.join(output, 't-compress2.png'), `compress-lossy:${rel(outB)}`);
+  assert(await pageCount(outA) === 5, 'lossless keeps page count');
+  assert((await pageText(outA, 1)).includes('MARKER-P1'), 'lossless keeps text');
+  assert(await pageCount(outB) === 5, 'rasterize keeps page count');
+  assert((await pageText(outB, 1)).trim() === '', 'rasterize flattens text to image');
+});
+
+test('protect: password required to open', async () => {
+  const out = path.join(output, 'protected.pdf');
+  fs.rmSync(out, { force: true });
+  runSmoke(path.join(samples, 'sample.pdf'), path.join(output, 't-protect.png'), `protect:secret123|${rel(out)}`);
+  const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
+  let rejected = false;
+  try {
+    await pdfjs.getDocument({ data: new Uint8Array(fs.readFileSync(out)) }).promise;
+  } catch (e) {
+    rejected = e.name === 'PasswordException';
+  }
+  assert(rejected, 'opening without password throws PasswordException');
+  const task = pdfjs.getDocument({ data: new Uint8Array(fs.readFileSync(out)), password: 'secret123' });
+  const doc = await task.promise;
+  assert(doc.numPages === 5, 'opens with password');
+  await task.destroy();
+});
+
+test('removepw: decrypts an encrypted document', async () => {
+  // Build an encrypted input, then remove its password through the app.
+  const encIn = path.join(output, 'enc-input.pdf');
+  const out = path.join(output, 'decrypted.pdf');
+  fs.rmSync(out, { force: true });
+  const { PDFDocument: Enc } = await import('@cantoo/pdf-lib');
+  const doc = await Enc.load(fs.readFileSync(path.join(samples, 'sample.pdf')));
+  await doc.encrypt({ userPassword: 'topsecret', ownerPassword: 'topsecret' });
+  fs.writeFileSync(encIn, await doc.save());
+
+  runSmoke(encIn, path.join(output, 't-removepw.png'), `removepw:topsecret|${rel(out)}`, ['--pw', 'topsecret']);
+  assert(await pageCount(out) === 5, 'decrypted file opens without password');
+  assert((await pageText(out, 1)).includes('MARKER-P1'), 'content intact after decryption');
+});
+
+test('redact: permanently removes text from the page', async () => {
+  const out = path.join(output, 'redacted.pdf');
+  fs.rmSync(out, { force: true });
+  runSmoke(path.join(samples, 'sample.pdf'), path.join(output, 't-redact.png'), `redact:${rel(out)}`);
+  assert(await pageCount(out) === 5, 'page count preserved');
+  const p1 = await pageText(out, 1);
+  assert(!p1.includes('MARKER-P1'), 'redacted text is gone from extraction');
+  assert(p1.trim() === '', 'redacted page was flattened to an image');
+  assert((await pageText(out, 2)).includes('MARKER-P2'), 'other pages untouched');
+});
+
+test('exportimages: writes PNG files', async () => {
+  const outDir = path.join(output, 'images');
+  fs.rmSync(outDir, { recursive: true, force: true });
+  fs.mkdirSync(outDir, { recursive: true });
+  runSmoke(path.join(samples, 'sample.pdf'), path.join(output, 't-export.png'), `exportimages:${rel(outDir)}`);
+  for (const f of ['sample-page-001.png', 'sample-page-002.png']) {
+    const bytes = fs.readFileSync(path.join(outDir, f));
+    assert(bytes[0] === 0x89 && bytes[1] === 0x50, `${f} is a PNG`);
+    assert(bytes.length > 5000, `${f} has content`);
+  }
 });
 
 // ---------------- runner ----------------

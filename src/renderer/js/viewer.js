@@ -1,6 +1,7 @@
 // PDF rendering: page shells, lazy canvas rendering, text layers, thumbnails, zoom.
 import * as pdfjsLib from 'pdfjs-dist/build/pdf.mjs';
 import { state, setStatus } from './state.js';
+import { showModal } from './modal.js';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('./pdfjs/pdf.worker.min.mjs', location.href).toString();
 
@@ -38,13 +39,45 @@ export function onCurrentPageChanged(fn) { currentPageListeners.push(fn); }
 export function onThumbBuilt(fn) { thumbBuiltListeners.push(fn); }
 
 let loadingTask = null;
+let presetPassword = null; // supplied via --pw in smoke mode
+
+export function setPresetPassword(pw) {
+  presetPassword = pw;
+}
 
 export async function openBytes(bytes, filePath) {
   const data = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
   setStatus('Opening…');
   // pdf.js transfers the buffer it is given to its worker, so pass a copy and
   // keep `state.bytes` intact for pdf-lib edits.
-  const task = pdfjsLib.getDocument({ data: data.slice(), ...DOC_OPTS });
+  const task = pdfjsLib.getDocument({
+    data: data.slice(),
+    password: state.docPassword || undefined,
+    ...DOC_OPTS,
+  });
+  task.onPassword = async (updatePassword, reason) => {
+    // onPassword only fires for encrypted documents, so docPassword doubles
+    // as the "this document is encrypted" flag.
+    if (presetPassword) {
+      state.docPassword = presetPassword;
+      updatePassword(presetPassword);
+      return;
+    }
+    const wrong = reason === pdfjsLib.PasswordResponses.INCORRECT_PASSWORD;
+    const values = await showModal({
+      title: wrong ? 'Wrong password — try again' : 'Password required',
+      message: 'This PDF is password-protected.',
+      fields: [{ name: 'pw', label: 'Password', type: 'password' }],
+      okText: 'Open',
+    });
+    if (!values) {
+      task.destroy();
+      setStatus('Cancelled — password required to open this PDF');
+      return;
+    }
+    state.docPassword = values.pw;
+    updatePassword(values.pw);
+  };
   const pdf = await task.promise;
   if (loadingTask) {
     await loadingTask.destroy().catch(() => {});

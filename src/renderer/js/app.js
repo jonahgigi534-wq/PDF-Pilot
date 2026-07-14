@@ -12,6 +12,7 @@ import { initAnnotations } from './annotations.js';
 import { initForms } from './forms.js';
 import { initFormCreate } from './formcreate.js';
 import { initEsign } from './esign.js';
+import { initSecurity } from './security.js';
 import { save, saveAs, undo, redo, onHistoryChanged } from './document.js';
 
 const api = window.pdfpilot;
@@ -25,6 +26,7 @@ async function openFromDialog() {
 async function openPath(filePath) {
   try {
     const data = await api.readFile(filePath);
+    state.docPassword = null;
     await openBytes(new Uint8Array(data), filePath);
     const name = filePath.split(/[\\/]/).pop();
     document.getElementById('doc-name').textContent = name;
@@ -114,10 +116,15 @@ async function boot() {
   initForms();
   initFormCreate();
   initEsign();
+  initSecurity();
 
   const params = new URLSearchParams(location.search);
   if (params.get('smoke')) {
     try {
+      if (params.get('pw')) {
+        const { setPresetPassword } = await import('./viewer.js');
+        setPresetPassword(params.get('pw'));
+      }
       await openPath(params.get('file'));
       await new Promise((r) => setTimeout(r, 800));
       // Optional scripted action for feature smoke tests.

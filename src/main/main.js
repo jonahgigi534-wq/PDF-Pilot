@@ -16,6 +16,8 @@ let smoke = null;
     };
     const a = process.argv.indexOf('--action');
     if (a !== -1 && process.argv[a + 1]) smoke.action = process.argv[a + 1];
+    const p = process.argv.indexOf('--pw');
+    if (p !== -1 && process.argv[p + 1]) smoke.pw = process.argv[p + 1];
   }
 }
 
@@ -78,6 +80,7 @@ function createWindow() {
   if (smoke) {
     url += '?smoke=1&file=' + encodeURIComponent(smoke.input);
     if (smoke.action) url += '&action=' + encodeURIComponent(smoke.action);
+    if (smoke.pw) url += '&pw=' + encodeURIComponent(smoke.pw);
   }
   mainWindow.loadURL(url);
   mainWindow.on('closed', () => {

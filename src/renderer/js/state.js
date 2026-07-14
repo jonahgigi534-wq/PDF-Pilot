@@ -9,6 +9,7 @@ export const state = {
   scale: 1.25,
   tool: 'select',
   dirty: false,
+  docPassword: null, // set while the loaded document is encrypted
   undoStack: [],
   redoStack: [],
 };

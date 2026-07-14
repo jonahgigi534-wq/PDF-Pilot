@@ -13,6 +13,9 @@ import { getPageView } from './viewer.js';
 import { flushFormValues } from './forms.js';
 import { createFormField } from './formcreate.js';
 import { smokePlaceSignature } from './esign.js';
+import { compress } from './compress.js';
+import { protect, removePassword, smokeRedactText } from './security.js';
+import { exportImages } from './export-images.js';
 
 const api = window.pdfpilot;
 
@@ -123,6 +126,37 @@ export async function runSmokeAction(action, params) {
       await smokePlaceSignature(1, 400, 600);
       await saveTo(arg);
       break;
+    case 'compress-lossless':
+      await compress('optimize');
+      await saveTo(arg);
+      break;
+    case 'compress-lossy':
+      await waitForPageRender(1);
+      await compress('rasterize', 100, 0.6);
+      await saveTo(arg);
+      break;
+    case 'protect': {
+      const [pw, out] = arg.split('|');
+      await protect(pw);
+      await saveTo(out);
+      break;
+    }
+    case 'removepw': {
+      const [pw, out] = arg.split('|');
+      await removePassword(pw);
+      await saveTo(out);
+      break;
+    }
+    case 'redact':
+      await waitForPageRender(1);
+      await smokeRedactText(1, 'MARKER-P1');
+      await saveTo(arg);
+      break;
+    case 'exportimages': {
+      await waitForPageRender(1);
+      await exportImages('png', 96, [0, 1], arg);
+      break;
+    }
     default:
       throw new Error(`unknown smoke action: ${name}`);
   }

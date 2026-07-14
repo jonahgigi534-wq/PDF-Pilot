@@ -14,6 +14,8 @@ let smoke = null;
       input: path.resolve(process.argv[i + 1]),
       output: path.resolve(process.argv[i + 2]),
     };
+    const a = process.argv.indexOf('--action');
+    if (a !== -1 && process.argv[a + 1]) smoke.action = process.argv[a + 1];
   }
 }
 
@@ -59,13 +61,23 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       spellcheck: false,
+      // Offscreen rendering keeps frames painting in the hidden smoke-test
+      // window so capturePage sees current content and rAF fires.
+      offscreen: !!smoke,
+      backgroundThrottling: !smoke,
     },
   });
   mainWindow.setMenuBarVisibility(false);
 
+  if (smoke) {
+    mainWindow.webContents.on('console-message', (e) => {
+      console.log(`[renderer] ${e.message}`);
+    });
+  }
   let url = 'app://pdfpilot/index.html';
   if (smoke) {
     url += '?smoke=1&file=' + encodeURIComponent(smoke.input);
+    if (smoke.action) url += '&action=' + encodeURIComponent(smoke.action);
   }
   mainWindow.loadURL(url);
   mainWindow.on('closed', () => {

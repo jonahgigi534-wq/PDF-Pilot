@@ -73,14 +73,37 @@ body {
 
 #tool-sidebar {
   flex: none;
-  width: 92px;
+  width: 108px; /* runtime-resizable; persisted in localStorage */
+  min-width: 72px;
+  max-width: 340px;
   background: #2e2f34;
-  border-right: 1px solid #1b1c1f;
   display: flex;
   flex-direction: column;
   gap: 4px;
   padding: 8px 6px;
   overflow-y: auto;
+  overflow-x: hidden;
+}
+
+#sidebar-resizer {
+  flex: none;
+  width: 5px;
+  cursor: ew-resize;
+  background: #1b1c1f;
+}
+#sidebar-resizer:hover, #sidebar-resizer.dragging { background: #3a6fbd; }
+
+#tool-search {
+  width: 100%;
+  margin-bottom: 4px;
+  min-width: 0;
+}
+
+#tool-search-empty {
+  color: #808189;
+  font-size: 12px;
+  padding: 8px 4px;
+  text-align: center;
 }
 .tool-btn { text-align: left; padding: 6px 8px; background: transparent; border-color: transparent; }
 .tool-btn:hover:not(:disabled) { background: #3a3b41; }

@@ -20,6 +20,7 @@ import { printDocument } from './print.js';
 import { runOcr } from './ocr.js';
 import { beginSession, reimport } from './wordmode.js';
 import { pdfToWord, wordToPdf, imagesToPdf } from './convert.js';
+import { setSidebarWidth, filterTools } from './sidebar.js';
 
 const api = window.pdfpilot;
 
@@ -195,6 +196,18 @@ export async function runSmokeAction(action, params) {
       const [img, out] = arg.split('|');
       await imagesToPdf([img]);
       await saveTo(out);
+      break;
+    }
+    case 'sidebar': {
+      // arg: "<width>,<query>" — resize the sidebar, filter tools, report counts.
+      const [w, query] = arg.split(',');
+      setSidebarWidth(parseInt(w, 10));
+      document.getElementById('tool-search').value = query || '';
+      filterTools(query || '');
+      const buttons = document.querySelectorAll('#tool-sidebar button');
+      const visible = Array.from(buttons).filter((b) => !b.classList.contains('hidden'));
+      window.__sidebarSmoke = { total: buttons.length, visible: visible.length, labels: visible.map((b) => b.textContent) };
+      console.log('[sidebar-smoke]', JSON.stringify(window.__sidebarSmoke));
       break;
     }
     case 'exporticon': {

@@ -36,6 +36,7 @@
 
   <div id="workspace">
     <div id="tool-sidebar">
+      <input id="tool-search" type="text" placeholder="Find tool…" title="Search the tools by name or what they do" />
       <button class="tool-btn active" data-tool="select" title="Select text and objects">Select</button>
       <div class="tool-group-label">Edit</div>
       <button class="tool-btn" data-tool="edit-text" title="Click any text to edit it in place">Edit text</button>
@@ -78,7 +79,9 @@
       <button class="action-btn" id="btn-remove-pw" title="Remove the open password">Remove password</button>
       <button class="tool-btn" data-tool="redact" title="Drag areas to redact, then apply">Redact</button>
       <button class="action-btn" id="btn-apply-redactions" disabled title="Permanently black out the marked areas">Apply redactions</button>
+      <div id="tool-search-empty" class="hidden">No tools match</div>
     </div>
+    <div id="sidebar-resizer" title="Drag to resize the tool sidebar"></div>
     <div id="thumb-rail"></div>
     <div id="viewer-container">
       <div id="pages"></div>

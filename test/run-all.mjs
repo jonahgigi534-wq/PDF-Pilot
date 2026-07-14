@@ -347,6 +347,23 @@ test('convert: pdf→word, word→pdf, images→pdf', async () => {
   assert(xobj instanceof PDFDict && [...xobj.entries()].length === 1, 'image embedded');
 });
 
+test('sidebar: resizes and search filters tools', async () => {
+  // "password" should match Protect… ("Set an open password") and
+  // Remove password by label/description, hiding unrelated tools.
+  const out = runSmoke(
+    path.join(samples, 'sample.pdf'),
+    path.join(output, 't-sidebar.png'),
+    'sidebar:240,password',
+  );
+  const m = out.match(/\[sidebar-smoke\] (\{.*\})/);
+  assert(m, 'sidebar smoke reported counts');
+  const info = JSON.parse(m[1]);
+  assert(info.visible >= 2 && info.visible < info.total, `password filter narrows tools (${info.visible}/${info.total})`);
+  assert(info.labels.some((l) => l.includes('Protect')), 'Protect… matches "password"');
+  assert(info.labels.some((l) => l.includes('Remove password')), 'Remove password matches');
+  assert(!info.labels.some((l) => l.includes('Highlight')), 'unrelated tools hidden');
+});
+
 test('print: pages render and reach the print window (dry run)', async () => {
   runSmoke(path.join(samples, 'sample.pdf'), path.join(output, 't-print.png'), 'printprep');
 });

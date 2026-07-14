@@ -14,6 +14,7 @@ import { initFormCreate } from './formcreate.js';
 import { initEsign } from './esign.js';
 import { initSecurity } from './security.js';
 import { save, saveAs, undo, redo, onHistoryChanged } from './document.js';
+import { printDocument } from './print.js';
 
 const api = window.pdfpilot;
 
@@ -39,7 +40,7 @@ async function openPath(filePath) {
 }
 
 const docButtons = [
-  'btn-save', 'btn-save-as', 'btn-zoom-out', 'btn-zoom-in', 'btn-fit-width',
+  'btn-save', 'btn-save-as', 'btn-print', 'btn-zoom-out', 'btn-zoom-in', 'btn-fit-width',
   'btn-prev-page', 'btn-next-page', 'btn-search-prev', 'btn-search-next',
 ];
 
@@ -67,6 +68,7 @@ function wireToolbar() {
   });
   $('btn-save').addEventListener('click', save);
   $('btn-save-as').addEventListener('click', saveAs);
+  $('btn-print').addEventListener('click', () => printDocument());
   $('btn-undo').addEventListener('click', undo);
   $('btn-redo').addEventListener('click', redo);
 
@@ -79,6 +81,7 @@ function wireToolbar() {
     if (e.ctrlKey && (e.key === '=' || e.key === '+')) { e.preventDefault(); zoomIn(); }
     if (e.ctrlKey && e.key === '-') { e.preventDefault(); zoomOut(); }
     if (e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === 's') { e.preventDefault(); save(); }
+    if (e.ctrlKey && e.key.toLowerCase() === 'p') { e.preventDefault(); printDocument(); }
     if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 's') { e.preventDefault(); saveAs(); }
     if (e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
     if (e.ctrlKey && (e.key.toLowerCase() === 'y' || (e.shiftKey && e.key.toLowerCase() === 'z'))) {

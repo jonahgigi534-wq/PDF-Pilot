@@ -279,6 +279,10 @@ test('exportimages: writes PNG files', async () => {
   }
 });
 
+test('print: pages render and reach the print window (dry run)', async () => {
+  runSmoke(path.join(samples, 'sample.pdf'), path.join(output, 't-print.png'), 'printprep');
+});
+
 // ---------------- runner ----------------
 
 const filter = process.argv[2];

@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('pdfpilot', {
   readFile: (filePath) => ipcRenderer.invoke('file:read', filePath),
   writeFile: (filePath, data) => ipcRenderer.invoke('file:write', filePath, data),
   setTitle: (title) => ipcRenderer.invoke('window:set-title', title),
+  printPages: (payload) => ipcRenderer.invoke('print:pages', payload),
   smokeRendered: (info) => ipcRenderer.send('smoke:rendered', info),
   smokeError: (msg) => ipcRenderer.send('smoke:error', msg),
 });

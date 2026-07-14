@@ -16,6 +16,7 @@ import { smokePlaceSignature } from './esign.js';
 import { compress } from './compress.js';
 import { protect, removePassword, smokeRedactText } from './security.js';
 import { exportImages } from './export-images.js';
+import { printDocument } from './print.js';
 
 const api = window.pdfpilot;
 
@@ -155,6 +156,19 @@ export async function runSmokeAction(action, params) {
     case 'exportimages': {
       await waitForPageRender(1);
       await exportImages('png', 96, [0, 1], arg);
+      break;
+    }
+    case 'exporticon': {
+      await waitForPageRender(1);
+      await exportImages('png', 72, [0], arg);
+      break;
+    }
+    case 'printprep': {
+      await waitForPageRender(1);
+      const result = await printDocument({ dryRun: true });
+      if (!result?.ok || result.pages !== state.pageCount) {
+        throw new Error(`printprep failed: ${JSON.stringify(result)}`);
+      }
       break;
     }
     default:

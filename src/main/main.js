@@ -161,6 +161,29 @@ ipcMain.handle('window:set-title', (e, title) => {
   if (mainWindow) mainWindow.setTitle(title ? `${title} — PDFPilot` : 'PDFPilot');
 });
 
+// Print: receives rendered page images, shows the system print dialog from a
+// hidden window. dryRun (used by tests) skips the dialog and reports success.
+ipcMain.handle('print:pages', async (e, { images, dryRun }) => {
+  const html = `<!DOCTYPE html><html><head><style>
+    html, body { margin: 0; }
+    img { display: block; width: 100vw; page-break-after: always; }
+    img:last-child { page-break-after: auto; }
+  </style></head><body>${images.map((src) => `<img src="${src}" />`).join('')}</body></html>`;
+
+  const printWin = new BrowserWindow({ show: false, parent: mainWindow });
+  await printWin.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html));
+  if (dryRun) {
+    printWin.destroy();
+    return { ok: true, pages: images.length };
+  }
+  return new Promise((resolve) => {
+    printWin.webContents.print({}, (success, reason) => {
+      printWin.destroy();
+      resolve({ ok: success, reason });
+    });
+  });
+});
+
 // ---------------- smoke test ----------------
 
 ipcMain.on('smoke:rendered', async (e, info) => {

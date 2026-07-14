@@ -1,0 +1,23 @@
+{
+  "name": "pdfpilot",
+  "productName": "PDFPilot",
+  "version": "0.1.0",
+  "description": "Free, open-source, offline PDF editor for Windows",
+  "license": "MIT",
+  "main": "src/main/main.js",
+  "scripts": {
+    "build": "node scripts/build-renderer.mjs",
+    "start": "npm run build && electron .",
+    "smoke": "npm run build && electron . --smoke",
+    "test": "node test/run-all.mjs",
+    "dist": "npm run build && electron-builder --win"
+  },
+  "dependencies": {
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^6.1.200"
+  },
+  "devDependencies": {
+    "electron": "^43.1.0",
+    "esbuild": "^0.28.1"
+  }
+}

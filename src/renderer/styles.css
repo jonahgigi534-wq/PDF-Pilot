@@ -1,0 +1,237 @@
+/* ---------- base ---------- */
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  font-size: 13px;
+  color: #e8e8ea;
+  background: #26272b;
+  user-select: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: #3a3b41;
+  border: 1px solid #4a4b52;
+  border-radius: 4px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+button:hover:not(:disabled) { background: #46474f; }
+button:disabled { opacity: 0.4; cursor: default; }
+button.active { background: #2d5c9e; border-color: #3a6fbd; }
+
+input[type="text"], select {
+  font: inherit;
+  color: inherit;
+  background: #1d1e22;
+  border: 1px solid #4a4b52;
+  border-radius: 4px;
+  padding: 4px 6px;
+}
+input[type="text"]:disabled { opacity: 0.4; }
+
+.hidden { display: none !important; }
+
+/* ---------- layout ---------- */
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+#toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: #2e2f34;
+  border-bottom: 1px solid #1b1c1f;
+  flex: none;
+}
+#toolbar .sep {
+  width: 1px;
+  height: 20px;
+  background: #4a4b52;
+  margin: 0 4px;
+}
+#toolbar .spacer { flex: 1; }
+#doc-name { color: #9a9ba3; max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#zoom-label { min-width: 44px; text-align: center; color: #c8c9cf; }
+#page-input { width: 44px; text-align: center; }
+#page-count-label { color: #9a9ba3; }
+#search-input { width: 160px; }
+#search-status { color: #9a9ba3; min-width: 60px; }
+
+#workspace {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+#tool-sidebar {
+  flex: none;
+  width: 92px;
+  background: #2e2f34;
+  border-right: 1px solid #1b1c1f;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 6px;
+  overflow-y: auto;
+}
+.tool-btn { text-align: left; padding: 6px 8px; background: transparent; border-color: transparent; }
+.tool-btn:hover:not(:disabled) { background: #3a3b41; }
+.tool-btn.active { background: #2d5c9e; border-color: #3a6fbd; }
+.tool-group-label {
+  color: #808189;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 10px 4px 2px;
+}
+
+#thumb-rail {
+  flex: none;
+  width: 168px;
+  background: #232428;
+  border-right: 1px solid #1b1c1f;
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.thumb {
+  cursor: pointer;
+  text-align: center;
+}
+.thumb canvas {
+  display: block;
+  margin: 0 auto;
+  background: white;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+  border: 2px solid transparent;
+  border-radius: 2px;
+}
+.thumb.current canvas { border-color: #4d8de8; }
+.thumb .thumb-label { color: #9a9ba3; margin-top: 4px; font-size: 12px; }
+
+#viewer-container {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  background: #1d1e22;
+  position: relative;
+}
+
+#pages {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 24px;
+  min-width: fit-content;
+}
+
+.page {
+  position: relative;
+  background: white;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.55);
+  flex: none;
+}
+.page > canvas {
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.page .overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+
+#welcome {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #9a9ba3;
+}
+#welcome h1 { color: #e8e8ea; font-weight: 600; margin: 0; }
+#welcome button { padding: 10px 22px; font-size: 15px; background: #2d5c9e; border-color: #3a6fbd; }
+
+#side-panel {
+  flex: none;
+  width: 260px;
+  background: #2e2f34;
+  border-left: 1px solid #1b1c1f;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+#statusbar {
+  flex: none;
+  padding: 3px 10px;
+  background: #2e2f34;
+  border-top: 1px solid #1b1c1f;
+  color: #9a9ba3;
+  font-size: 12px;
+}
+
+/* ---------- pdf.js text layer (adapted from pdfjs-dist/web/pdf_viewer.css, Apache-2.0) ---------- */
+.textLayer {
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+  opacity: 1;
+  line-height: 1;
+  letter-spacing: normal;
+  word-spacing: normal;
+  text-size-adjust: none;
+  forced-color-adjust: none;
+  transform-origin: 0 0;
+  caret-color: CanvasText;
+  z-index: 1;
+  user-select: text;
+
+  --min-font-size: 1;
+  --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size));
+  --min-font-size-inv: calc(1 / var(--min-font-size));
+}
+.textLayer :is(span, br) {
+  color: transparent;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+  user-select: text;
+}
+.textLayer > :not(.markedContent),
+.textLayer .markedContent span:not(.markedContent) {
+  z-index: 1;
+  --font-height: 0;
+  font-size: calc(var(--text-scale-factor) * var(--font-height));
+  --scale-x: 1;
+  --rotate: 0deg;
+  transform: rotate(var(--rotate)) scaleX(var(--scale-x)) scale(var(--min-font-size-inv));
+}
+.textLayer .markedContent { display: contents; }
+.textLayer span[role="img"] { user-select: none; cursor: default; }
+.textLayer ::selection { background: rgba(77, 141, 232, 0.35); }
+
+/* search highlights drawn by PDFPilot (not pdf.js) */
+.search-hit {
+  position: absolute;
+  background: rgba(255, 200, 0, 0.35);
+  pointer-events: none;
+  z-index: 1;
+}
+.search-hit.current { background: rgba(255, 120, 0, 0.55); }

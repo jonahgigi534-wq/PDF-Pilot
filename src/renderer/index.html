@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; script-src 'self'" />
+  <title>PDFPilot</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div id="toolbar">
+    <button id="btn-open" title="Open PDF (Ctrl+O)">Open</button>
+    <button id="btn-save" title="Save (Ctrl+S)" disabled>Save</button>
+    <button id="btn-save-as" title="Save As (Ctrl+Shift+S)" disabled>Save As</button>
+    <span class="sep"></span>
+    <button id="btn-undo" title="Undo (Ctrl+Z)" disabled>Undo</button>
+    <button id="btn-redo" title="Redo (Ctrl+Y)" disabled>Redo</button>
+    <span class="sep"></span>
+    <button id="btn-zoom-out" title="Zoom out" disabled>−</button>
+    <span id="zoom-label">100%</span>
+    <button id="btn-zoom-in" title="Zoom in" disabled>+</button>
+    <button id="btn-fit-width" title="Fit width" disabled>Fit</button>
+    <span class="sep"></span>
+    <button id="btn-prev-page" title="Previous page" disabled>◀</button>
+    <input id="page-input" type="text" value="" size="3" disabled />
+    <span id="page-count-label">/ 0</span>
+    <button id="btn-next-page" title="Next page" disabled>▶</button>
+    <span class="sep"></span>
+    <input id="search-input" type="text" placeholder="Search…" disabled />
+    <button id="btn-search-prev" title="Previous match" disabled>↑</button>
+    <button id="btn-search-next" title="Next match" disabled>↓</button>
+    <span id="search-status"></span>
+    <span class="spacer"></span>
+    <span id="doc-name"></span>
+  </div>
+
+  <div id="workspace">
+    <div id="tool-sidebar">
+      <button class="tool-btn active" data-tool="select" title="Select / pan">Select</button>
+    </div>
+    <div id="thumb-rail"></div>
+    <div id="viewer-container">
+      <div id="pages"></div>
+      <div id="welcome">
+        <h1>PDFPilot</h1>
+        <p>Free, open-source PDF editing — fully offline.</p>
+        <button id="btn-welcome-open">Open a PDF</button>
+      </div>
+    </div>
+    <div id="side-panel" class="hidden"></div>
+  </div>
+
+  <div id="statusbar">
+    <span id="status-text">Ready</span>
+  </div>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

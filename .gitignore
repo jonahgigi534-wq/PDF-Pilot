@@ -1,0 +1,30 @@
+# Node
+node_modules/
+npm-debug.log*
+
+# Build output
+dist/
+release/
+out/
+*.asar
+
+# Python (sidecar, added later)
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.spec
+sidecar/build/
+sidecar/dist/
+
+# Test artifacts
+test/output/
+*.tmp
+
+# OS / editor noise
+Thumbs.db
+Desktop.ini
+.DS_Store
+.vscode/
+.idea/
+test/samples/

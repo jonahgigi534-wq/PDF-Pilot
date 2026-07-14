@@ -170,6 +170,19 @@ test('annotations: drawing/shapes/textbox render into page', async () => {
   assert(text.includes('TEXTBOX-99-SMOKE'), 'text box content present');
 });
 
+test('fillform: values written into AcroForm fields', async () => {
+  const out = path.join(output, 'filled-form.pdf');
+  fs.rmSync(out, { force: true });
+  runSmoke(path.join(samples, 'sample-form.pdf'), path.join(output, 't-fillform.png'), `fillform:${rel(out)}`);
+  const { PDFDocument } = await import('pdf-lib');
+  const doc = await PDFDocument.load(fs.readFileSync(out));
+  const form = doc.getForm();
+  assert(form.getTextField('name').getText() === 'Jane Tester', 'text field value');
+  assert(form.getCheckBox('agree').isChecked(), 'checkbox checked');
+  assert(form.getDropdown('colour').getSelected()[0] === 'Blue', 'dropdown selection');
+  assert(form.getRadioGroup('size').getSelected() === 'L', 'radio selection');
+});
+
 // ---------------- runner ----------------
 
 const filter = process.argv[2];

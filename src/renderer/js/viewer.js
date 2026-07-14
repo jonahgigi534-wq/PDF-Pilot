@@ -154,6 +154,19 @@ export function getPageView(n) {
   return pageViews.get(n);
 }
 
+// Converts a PDF-space rect [x1,y1,x2,y2] to CSS-space {left,top,width,height}
+// in the given page viewport (replaces pdf.js's removed convertToViewportRectangle).
+export function pdfRectToCss(viewport, rect) {
+  const [ax, ay] = viewport.convertToViewportPoint(rect[0], rect[1]);
+  const [bx, by] = viewport.convertToViewportPoint(rect[2], rect[3]);
+  return {
+    left: Math.min(ax, bx),
+    top: Math.min(ay, by),
+    width: Math.abs(bx - ax),
+    height: Math.abs(by - ay),
+  };
+}
+
 export function eachPageView(fn) {
   for (const [n, view] of pageViews) fn(n, view);
 }

@@ -15,6 +15,15 @@ function notifyHistory() {
   for (const fn of historyListeners) fn();
 }
 
+// Hooks that run before an edit or save (e.g. flushing pending form values).
+const preEditHooks = [];
+export function registerPreEditHook(fn) {
+  preEditHooks.push(fn);
+}
+async function runPreEditHooks() {
+  for (const fn of preEditHooks) await fn();
+}
+
 // Runs `mutator(pdfDoc)` on a pdf-lib document loaded from the current bytes.
 export async function applyEdit(label, mutator) {
   return applyBytes(label, async (bytes) => {
@@ -27,6 +36,7 @@ export async function applyEdit(label, mutator) {
 // Lower-level variant for operations that produce bytes directly.
 export async function applyBytes(label, fn) {
   if (!state.bytes) return;
+  await runPreEditHooks();
   setStatus(`${label}…`);
   try {
     const before = state.bytes;
@@ -76,6 +86,7 @@ export async function redo() {
 
 export async function save() {
   if (!state.bytes) return;
+  await runPreEditHooks();
   if (!state.filePath) return saveAs();
   await api.writeFile(state.filePath, state.bytes);
   state.dirty = false;
@@ -85,6 +96,7 @@ export async function save() {
 
 export async function saveAs() {
   if (!state.bytes) return;
+  await runPreEditHooks();
   const target = await api.saveDialog({
     title: 'Save PDF as',
     defaultPath: state.filePath || 'document.pdf',

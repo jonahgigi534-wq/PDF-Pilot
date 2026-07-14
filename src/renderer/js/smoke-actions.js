@@ -10,6 +10,7 @@ import {
   applyMarkupFromSelection, addStickyNote, commitFreehand, commitShape, commitTextboxAt,
 } from './annotations.js';
 import { getPageView } from './viewer.js';
+import { flushFormValues } from './forms.js';
 
 const api = window.pdfpilot;
 
@@ -84,6 +85,26 @@ export async function runSmokeAction(action, params) {
       await commitShape('ellipse', 1, getPageView(1), 440, 560, 560, 640);
       await commitShape('line', 1, getPageView(1), 580, 560, 660, 640);
       await commitTextboxAt(1, getPageView(1), 100, 680, 'TEXTBOX-99-SMOKE');
+      await saveTo(arg);
+      break;
+    }
+    case 'fillform': {
+      const view = await waitForPageRender(1);
+      const byName = (fieldName) => view.overlay.querySelector(`.form-field[data-name="${fieldName}"]`);
+      const nameInput = byName('name');
+      nameInput.value = 'Jane Tester';
+      nameInput.dispatchEvent(new Event('input'));
+      const agree = byName('agree');
+      agree.checked = true;
+      agree.dispatchEvent(new Event('change'));
+      const colour = byName('colour');
+      colour.value = 'Blue';
+      colour.dispatchEvent(new Event('change'));
+      const radios = view.overlay.querySelectorAll('.form-field[data-name="size"]');
+      const l = Array.from(radios)[2];
+      l.checked = true;
+      l.dispatchEvent(new Event('change'));
+      await flushFormValues();
       await saveTo(arg);
       break;
     }

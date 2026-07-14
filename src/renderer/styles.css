@@ -309,6 +309,40 @@ svg.anno-preview {
 
 #annot-color { margin: 4px; }
 
+/* ---------- form fields ---------- */
+.form-field,
+input.form-field, textarea.form-field, select.form-field {
+  position: absolute;
+  z-index: 3;
+  pointer-events: auto;
+  background: rgb(235, 242, 255);
+  border: 1px solid rgba(80, 130, 220, 0.55);
+  border-radius: 2px;
+  color: black;
+  font-family: Arial, sans-serif;
+  padding: 0 3px;
+  box-sizing: border-box;
+}
+.form-field:focus,
+input.form-field:focus, textarea.form-field:focus, select.form-field:focus {
+  outline: 2px solid #4d8de8;
+  background: white;
+}
+textarea.form-field { resize: none; }
+input[type="checkbox"].form-field, input[type="radio"].form-field {
+  accent-color: #2d5c9e;
+  margin: 0;
+}
+.sig-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-style: italic;
+  border-style: dashed;
+  overflow: hidden;
+}
+
 /* ---------- modal ---------- */
 .modal-backdrop {
   position: fixed;

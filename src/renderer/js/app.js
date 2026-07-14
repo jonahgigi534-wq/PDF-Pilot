@@ -9,6 +9,7 @@ import { initTools } from './tools.js';
 import { initEditTools } from './edit-text.js';
 import { initPageOps } from './pageops.js';
 import { initAnnotations } from './annotations.js';
+import { initForms } from './forms.js';
 import { save, saveAs, undo, redo, onHistoryChanged } from './document.js';
 
 const api = window.pdfpilot;
@@ -108,6 +109,7 @@ async function boot() {
   initEditTools();
   initPageOps();
   initAnnotations();
+  initForms();
 
   const params = new URLSearchParams(location.search);
   if (params.get('smoke')) {

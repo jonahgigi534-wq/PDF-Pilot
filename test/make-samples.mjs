@@ -53,5 +53,39 @@ export async function makeSecondSample() {
   return file;
 }
 
-const made = [await makeTextSample(), await makeSecondSample()];
+export async function makeFormSample() {
+  const doc = await PDFDocument.create();
+  const helv = await doc.embedFont(StandardFonts.Helvetica);
+  const page = doc.addPage([612, 792]);
+  page.drawText('Test Form', { x: 72, y: 720, size: 20, font: helv });
+
+  const form = doc.getForm();
+  const label = (text, y) => page.drawText(text, { x: 72, y, size: 11, font: helv });
+
+  label('Name:', 664);
+  const name = form.createTextField('name');
+  name.addToPage(page, { x: 160, y: 650, width: 220, height: 24 });
+
+  label('I agree:', 614);
+  const agree = form.createCheckBox('agree');
+  agree.addToPage(page, { x: 160, y: 604, width: 18, height: 18 });
+
+  label('Colour:', 564);
+  const colour = form.createDropdown('colour');
+  colour.addOptions(['Red', 'Blue', 'Green']);
+  colour.select('Red');
+  colour.addToPage(page, { x: 160, y: 552, width: 140, height: 24 });
+
+  label('Size:', 514);
+  const size = form.createRadioGroup('size');
+  size.addOptionToPage('S', page, { x: 160, y: 500, width: 16, height: 16 });
+  size.addOptionToPage('M', page, { x: 200, y: 500, width: 16, height: 16 });
+  size.addOptionToPage('L', page, { x: 240, y: 500, width: 16, height: 16 });
+
+  const file = path.join(outDir, 'sample-form.pdf');
+  fs.writeFileSync(file, await doc.save());
+  return file;
+}
+
+const made = [await makeTextSample(), await makeSecondSample(), await makeFormSample()];
 console.log('samples written:\n  ' + made.join('\n  '));

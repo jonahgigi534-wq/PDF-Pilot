@@ -4,7 +4,7 @@
 // notes become real /Text annotations so other viewers show them too.
 import { rgb, BlendMode, StandardFonts, PDFName, PDFArray, PDFString, PDFHexString } from 'pdf-lib';
 import { state, setStatus } from './state.js';
-import { getPageView, eachPageView, onPageRendered } from './viewer.js';
+import { getPageView, eachPageView, onPageRendered, pdfRectToCss } from './viewer.js';
 import { applyEdit } from './document.js';
 import { registerTool, activeTool, setTool } from './tools.js';
 import { showModal } from './modal.js';
@@ -199,11 +199,11 @@ async function renderNoteIcons(n, view) {
   }
   for (const a of annots) {
     if (a.subtype !== 'Text') continue;
-    const [x1, y1, x2, y2] = view.viewport.convertToViewportRectangle(a.rect);
+    const r = pdfRectToCss(view.viewport, a.rect);
     const icon = document.createElement('div');
     icon.className = 'note-icon';
-    icon.style.left = `${Math.min(x1, x2)}px`;
-    icon.style.top = `${Math.min(y1, y2)}px`;
+    icon.style.left = `${r.left}px`;
+    icon.style.top = `${r.top}px`;
     icon.textContent = '🗨';
     const text = a.contentsObj?.str ?? a.contents ?? '';
     icon.title = text;

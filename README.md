@@ -4,6 +4,15 @@ A free, open-source desktop PDF editor for Windows 11 — similar in spirit to
 Adobe Acrobat, but with no license keys, no subscriptions, no accounts, and no
 cloud. Everything runs **100% locally and offline** on your machine.
 
+## ⬇️ Download
+
+**[Download the latest PDFPilot installer for Windows](https://github.com/jonahgigi534-wq/PDF-Pilot/releases/latest)**
+
+Grab `PDFPilot-Setup-<version>.exe` from that page and run it — no accounts, no
+setup, no other software required. On first launch Windows may show a
+"Windows protected your PC" warning (the app is unsigned); click **More info →
+Run anyway**. After you install once, PDFPilot updates itself automatically.
+
 Built with [Electron](https://www.electronjs.org/),
 [PDF.js](https://mozilla.github.io/pdf.js/) (Mozilla) for rendering, and
 [pdf-lib](https://pdf-lib.js.org/) for editing. Password protection uses

@@ -64,8 +64,8 @@
     "publish": [
       {
         "provider": "github",
-        "owner": "YOUR_GITHUB_USERNAME",
-        "repo": "PDFPilot"
+        "owner": "jonahgigi534-wq",
+        "repo": "PDF-Pilot"
       }
     ]
   },

@@ -66,7 +66,8 @@
       {
         "provider": "github",
         "owner": "jonahgigi534-wq",
-        "repo": "PDF-Pilot"
+        "repo": "PDF-Pilot",
+        "releaseType": "release"
       }
     ]
   },

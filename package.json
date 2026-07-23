@@ -11,7 +11,8 @@
     "smoke": "npm run build && electron . --smoke",
     "test": "node test/run-all.mjs",
     "dist": "npm run build && electron-builder --win",
-    "build:sidecar": "sidecar\u000benvScriptspyinstaller --noconfirm --onedir --console --name pdfpilot-ocr --collect-all rapidocr_onnxruntime --distpath sidecar/dist --workpath sidecar/build --specpath sidecar sidecar/ocr_worker.py"
+    "release": "npm run build && electron-builder --win --publish always",
+    "build:sidecar": "sidecar/venv/Scripts/pyinstaller --noconfirm --onedir --console --name pdfpilot-ocr --collect-all rapidocr_onnxruntime --distpath sidecar/dist --workpath sidecar/build --specpath sidecar sidecar/ocr_worker.py"
   },
   "devDependencies": {
     "@cantoo/pdf-lib": "^2.7.3",
@@ -59,6 +60,16 @@
         "from": "sidecar/dist/pdfpilot-ocr",
         "to": "sidecar"
       }
+    ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "YOUR_GITHUB_USERNAME",
+        "repo": "PDFPilot"
+      }
     ]
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9"
   }
 }

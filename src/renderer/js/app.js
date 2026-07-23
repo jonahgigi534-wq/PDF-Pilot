@@ -113,8 +113,29 @@ function wireToolbar() {
   });
 }
 
+function wireAutoUpdate() {
+  const toast = document.getElementById('update-toast');
+  const text = document.getElementById('update-toast-text');
+  const restart = document.getElementById('update-restart');
+  document.getElementById('update-dismiss').addEventListener('click', () => toast.classList.add('hidden'));
+  restart.addEventListener('click', () => api.installUpdateNow());
+
+  api.onUpdateStatus?.((info) => {
+    toast.classList.remove('hidden');
+    if (info.state === 'downloading') {
+      text.textContent = `Downloading update ${info.version}…`;
+    } else if (info.state === 'progress') {
+      text.textContent = `Downloading update… ${info.percent}%`;
+    } else if (info.state === 'ready') {
+      text.textContent = `Update ${info.version} is ready.`;
+      restart.classList.remove('hidden');
+    }
+  });
+}
+
 async function boot() {
   wireToolbar();
+  wireAutoUpdate();
   initViewerEvents();
   initSearch();
   initTools();

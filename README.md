@@ -45,6 +45,35 @@ npm run build:sidecar    # produces sidecar/dist/pdfpilot-ocr (bundled into the 
 End users never need Python — the sidecar is a self-contained executable
 inside the installer.
 
+## Automatic updates
+
+PDFPilot updates itself. On launch (and every 6 hours) the installed app
+checks GitHub Releases for a newer version, downloads it in the background,
+and installs it the next time the app is restarted — the user never
+re-installs manually. Delta updates mean only the changed parts download, not
+the whole installer each time. A small toast appears when an update is ready,
+with a **Restart now** button.
+
+**To enable it (one-time setup by the publisher):**
+
+1. Create a **public** GitHub repository named `PDFPilot`.
+2. In `package.json`, under `build.publish`, replace `YOUR_GITHUB_USERNAME`
+   with your GitHub username.
+3. Create a [personal access token](https://github.com/settings/tokens) with
+   the `repo` scope and set it in your shell: `set GH_TOKEN=ghp_yourtoken`.
+
+**To ship an update:** bump `"version"` in `package.json` (e.g. `0.1.1`),
+rebuild the OCR sidecar if it changed (`npm run build:sidecar`), then run:
+
+```
+npm run release
+```
+
+That builds the installer and uploads it plus the `latest.yml` manifest to a
+GitHub release. Every installed copy picks it up automatically within a few
+hours (or on next launch). Until this setup is done, the app simply skips the
+update check — everything else works normally.
+
 ## Using PDFPilot
 
 Open a PDF with **Open** (Ctrl+O). The left rail shows page thumbnails; the
@@ -65,6 +94,13 @@ Ctrl+Y) until you close the app.
   file where possible) and redraws your text in a matching size and font
   style. Best for small fixes — a typo, a date, a name. For rewriting whole
   paragraphs, wait for "Edit in Word mode" (planned, see below).
+- **Edit scan** — edit text on scanned or photocopied pages, where the "text"
+  is really just image pixels. Click a line: PDFPilot runs OCR on that page,
+  then lets you retype the recognised text. On commit it paints over the
+  original scanned pixels (matching the paper colour) and drops in real,
+  selectable text — the same approach Acrobat uses. Works well on clean
+  printed scans; the substituted font won't perfectly match the original, and
+  handwriting isn't reliable (an OCR limitation).
 - **Image** — insert a PNG/JPG, then click where it should go.
 - **White-out** — drag a rectangle to cover content with white (visual cover
   only; use **Redact** to permanently remove content).

@@ -108,6 +108,7 @@ app.whenReady().then(() => {
   });
 
   createWindow();
+  initAutoUpdate();
 
   if (smoke) {
     setTimeout(() => {
@@ -119,6 +120,42 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
   app.quit();
+});
+
+// ---------------- auto-update ----------------
+// Checks GitHub Releases (configured under "build.publish" in package.json)
+// for a newer version, downloads it in the background, and installs it on the
+// next quit. Only active in the packaged app; failures are logged, never shown
+// as dialogs, so a missing/unreachable feed simply does nothing.
+let autoUpdater = null;
+try {
+  ({ autoUpdater } = require('electron-updater'));
+} catch {
+  // electron-updater not present (e.g. running from source) — skip.
+}
+
+function initAutoUpdate() {
+  if (!autoUpdater || !app.isPackaged || smoke) return;
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+  autoUpdater.on('update-available', (info) => {
+    mainWindow?.webContents.send('update:status', { state: 'downloading', version: info.version });
+  });
+  autoUpdater.on('download-progress', (p) => {
+    mainWindow?.webContents.send('update:status', { state: 'progress', percent: Math.round(p.percent) });
+  });
+  autoUpdater.on('update-downloaded', (info) => {
+    mainWindow?.webContents.send('update:status', { state: 'ready', version: info.version });
+  });
+  autoUpdater.on('error', (err) => console.error('[auto-update]', err?.message || err));
+
+  const check = () => autoUpdater.checkForUpdates().catch((e) => console.error('[auto-update]', e.message));
+  check();
+  setInterval(check, 6 * 60 * 60 * 1000); // re-check every 6 hours
+}
+
+ipcMain.handle('update:install-now', () => {
+  if (autoUpdater) autoUpdater.quitAndInstall();
 });
 
 // ---------------- IPC ----------------

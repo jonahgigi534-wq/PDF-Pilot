@@ -16,6 +16,8 @@ contextBridge.exposeInMainWorld('pdfpilot', {
   sofficeConvert: (opts) => ipcRenderer.invoke('soffice:convert', opts),
   tempWrite: (data, ext) => ipcRenderer.invoke('temp:write', data, ext),
   openPath: (p) => ipcRenderer.invoke('shell:open-path', p),
+  onUpdateStatus: (cb) => ipcRenderer.on('update:status', (e, info) => cb(info)),
+  installUpdateNow: () => ipcRenderer.invoke('update:install-now'),
   smokeRendered: (info) => ipcRenderer.send('smoke:rendered', info),
   smokeError: (msg) => ipcRenderer.send('smoke:error', msg),
 });

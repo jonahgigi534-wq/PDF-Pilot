@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "description": "Free, open-source, offline PDF editor for Windows",
   "license": "MIT",
+  "author": "jonahgigi534-wq",
   "main": "src/main/main.js",
   "scripts": {
     "build": "node scripts/build-renderer.mjs",

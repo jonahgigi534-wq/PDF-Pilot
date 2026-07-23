@@ -41,33 +41,34 @@ async function ocrDialog() {
   await runOcr(pages.map((i) => i + 1));
 }
 
-export async function runOcr(pageNumbers) {
+// Renders page `n` at OCR_DPI and recognises its text. Returns raw results in
+// image-pixel coordinates plus the rendering viewport and canvas, so callers
+// can map boxes to PDF space and sample the rendered image. Shared by the
+// invisible-layer OCR feature and the scanned-text editor.
+export async function recognizePage(n) {
   const status = await api.ocrStatus();
-  const useSidecar = status.available;
-  setStatus(useSidecar
-    ? `OCR engine: ${status.engine}`
-    : 'OCR engine unavailable — using Tesseract.js fallback');
+  const { canvas, viewport } = await renderPageCanvas(n, OCR_DPI);
+  let lines;
+  if (status.available) {
+    const png = await canvasToBytes(canvas, 'image/png');
+    const resp = await api.ocrPage(png);
+    if (!resp.ok) {
+      if (resp.unavailable) lines = await tesseractOcr(canvas);
+      else throw new Error(`OCR failed on page ${n}: ${resp.error}`);
+    } else {
+      lines = resp.lines;
+    }
+  } else {
+    lines = await tesseractOcr(canvas);
+  }
+  return { lines, viewport, canvas, engine: status.available ? status.engine : 'tesseract.js' };
+}
 
+export async function runOcr(pageNumbers) {
   const results = []; // { n, viewport, lines }
   for (const n of pageNumbers) {
     setStatus(`OCR page ${n} of ${pageNumbers[pageNumbers.length - 1]}… (local processing)`);
-    const { canvas, viewport } = await renderPageCanvas(n, OCR_DPI);
-    let lines;
-    if (useSidecar) {
-      const png = await canvasToBytes(canvas, 'image/png');
-      const resp = await api.ocrPage(png);
-      if (!resp.ok) {
-        if (resp.unavailable) {
-          lines = await tesseractOcr(canvas);
-        } else {
-          throw new Error(`OCR failed on page ${n}: ${resp.error}`);
-        }
-      } else {
-        lines = resp.lines;
-      }
-    } else {
-      lines = await tesseractOcr(canvas);
-    }
+    const { lines, viewport } = await recognizePage(n);
     results.push({ n, viewport, lines });
   }
 

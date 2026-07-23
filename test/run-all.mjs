@@ -364,6 +364,21 @@ test('sidebar: resizes and search filters tools', async () => {
   assert(!info.labels.some((l) => l.includes('Highlight')), 'unrelated tools hidden');
 });
 
+test('editscan: OCR-to-editable turns a scanned line into real editable text', async () => {
+  const scanned = path.join(output, 'scanned-edit.pdf');
+  const out = path.join(output, 'editscan-out.pdf');
+  fs.rmSync(scanned, { force: true });
+  fs.rmSync(out, { force: true });
+
+  runSmoke(path.join(samples, 'sample.pdf'), path.join(output, 't-scanned-edit.png'), `make-scanned:${rel(scanned)}`);
+  assert((await pageText(scanned, 1)).trim() === '', 'scanned input has no text layer');
+
+  runSmoke(scanned, path.join(output, 't-editscan.png'), `editscan:${rel(out)}`);
+  const text = await pageText(out, 1);
+  assert(text.includes('EDITED-SCAN-OK'), `edited line is now real, extractable text; got: ${text.slice(0, 200)}`);
+  assert(!/Unique marker/i.test(text), 'the original recognised line was replaced, not appended');
+});
+
 test('print: pages render and reach the print window (dry run)', async () => {
   runSmoke(path.join(samples, 'sample.pdf'), path.join(output, 't-print.png'), 'printprep');
 });

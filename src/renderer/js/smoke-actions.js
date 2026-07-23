@@ -21,6 +21,7 @@ import { runOcr } from './ocr.js';
 import { beginSession, reimport } from './wordmode.js';
 import { pdfToWord, wordToPdf, imagesToPdf } from './convert.js';
 import { setSidebarWidth, filterTools } from './sidebar.js';
+import { smokeEditScan } from './edit-scan.js';
 
 const api = window.pdfpilot;
 
@@ -162,6 +163,11 @@ export async function runSmokeAction(action, params) {
       await exportImages('png', 96, [0, 1], arg);
       break;
     }
+    case 'editscan':
+      await waitForPageRender(1, { requireText: false });
+      await smokeEditScan(1, 'Uniquemarkerforthispage', 'EDITED-SCAN-OK replaced line');
+      await saveTo(arg);
+      break;
     case 'make-scanned':
       // Produces an image-only PDF (no text layer) for OCR tests.
       await waitForPageRender(1);
@@ -232,11 +238,13 @@ async function saveTo(relPath) {
   if (relPath) await api.writeFile(relPath, state.bytes);
 }
 
-async function waitForPageRender(n, timeoutMs = 10000) {
+async function waitForPageRender(n, { timeoutMs = 10000, requireText = true } = {}) {
   const t0 = Date.now();
   while (Date.now() - t0 < timeoutMs) {
     const view = getPageView(n);
-    if (view?.rendered && view.textLayerDiv.childElementCount > 0) return view;
+    // Image-only (scanned) pages have no text layer, so requireText:false
+    // waits for just the canvas render.
+    if (view?.rendered && (!requireText || view.textLayerDiv.childElementCount > 0)) return view;
     await new Promise((r) => setTimeout(r, 50));
   }
   throw new Error(`waitForPageRender: page ${n} not rendered in time`);
